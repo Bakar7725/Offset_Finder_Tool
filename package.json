@@ -1,0 +1,12 @@
+{
+  "name": "offset-extractor",
+  "version": "1.0.0",
+  "description": "Extract game offsets from COW.GamePlay dump.cs",
+  "main": "index.html",
+  "scripts": {
+    "dev": "serve ."
+  },
+  "keywords": ["offset", "extractor", "cow", "game"],
+  "author": "",
+  "license": "MIT"
+}

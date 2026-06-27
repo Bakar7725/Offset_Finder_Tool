@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offset Extractor - COW Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        h1 {
+            color: #fff;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .subtitle {
+            color: #8899bb;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.03);
+            position: relative;
+        }
+        .upload-area:hover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.05);
+        }
+        .upload-area.dragover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+            transform: scale(1.02);
+        }
+        .upload-area .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .upload-area p {
+            color: #ccd6e8;
+            font-size: 16px;
+        }
+        .upload-area .small {
+            color: #667799;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        #fileInput {
+            display: none;
+        }
+        .file-info {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(74, 158, 255, 0.1);
+            border-radius: 12px;
+            margin-top: 16px;
+            border: 1px solid rgba(74, 158, 255, 0.2);
+        }
+        .file-info.show {
+            display: flex;
+        }
+        .file-info .name {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .file-info .size {
+            color: #8899bb;
+            font-size: 12px;
+        }
+        .file-info .remove {
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0 8px;
+            transition: 0.2s;
+        }
+        .file-info .remove:hover {
+            transform: scale(1.2);
+        }
+        .btn {
+            background: linear-gradient(135deg, #4a9eff, #6c5ce7);
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 16px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .btn.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .btn.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(74, 158, 255, 0.3);
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .status {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+        .status.show {
+            display: block;
+        }
+        .status.loading {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffd93d;
+            border: 1px solid rgba(255, 193, 7, 0.2);
+        }
+        .status.success {
+            background: rgba(46, 213, 115, 0.15);
+            color: #2ed573;
+            border: 1px solid rgba(46, 213, 115, 0.2);
+        }
+        .status.error {
+            background: rgba(255, 71, 87, 0.15);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+        }
+        .results-preview {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            display: none;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .results-preview.show {
+            display: block;
+        }
+        .results-preview pre {
+            color: #a8b8d8;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.6;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px 16px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 100px;
+        }
+        .stat-item .number {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .stat-item .label {
+            color: #8899bb;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        .stat-item .number.green { color: #2ed573; }
+        .stat-item .number.red { color: #ff4757; }
+        .stat-item .number.blue { color: #4a9eff; }
+        .btn-download {
+            background: linear-gradient(135deg, #2ed573, #1abc9c);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+            display: none;
+            width: 100%;
+        }
+        .btn-download.show {
+            display: block;
+        }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(46, 213, 115, 0.3);
+        }
+        .missing-list {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(255, 71, 87, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #ff4757;
+        }
+        .missing-list details {
+            color: #a8b8d8;
+        }
+        .missing-list summary {
+            color: #ff4757;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .missing-list ul {
+            margin-top: 8px;
+            padding-left: 20px;
+            font-size: 13px;
+        }
+        .missing-list ul li {
+            margin: 4px 0;
+            color: #ccd6e8;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(74, 158, 255, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(74, 158, 255, 0.5);
+        }
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            h1 { font-size: 22px; }
+            .upload-area { padding: 24px; }
+            .stats { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Offset Extractor</h1>
+        <div class="subtitle">Extract game offsets from COW.GamePlay dump.cs</div>
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="dropZone">
+            <div class="icon">📂</div>
+            <p><strong>Click to upload</strong> or drag & drop</p>
+            <div class="small">dump.cs file from COW.GamePlay</div>
+            <input type="file" id="fileInput" accept=".cs,.txt">
+        </div>
+
+        <!-- File Info -->
+        <div class="file-info" id="fileInfo">
+            <div>
+                <div class="name" id="fileName">dump.cs</div>
+                <div class="size" id="fileSize">0 KB</div>
+            </div>
+            <span class="remove" id="removeFile">✕</span>
+        </div>
+
+        <!-- Extract Button -->
+        <button class="btn" id="extractBtn">🚀 Find Offsets</button>
+
+        <!-- Status -->
+        <div class="status" id="status"></div>
+
+        <!-- Stats -->
+        <div class="stats" id="statsContainer" style="display:none;">
+            <div class="stat-item">
+                <div class="number blue" id="totalCount">0</div>
+                <div class="label">Total Offsets</div>
+            </div>
+            <div class="stat-item">
+                <div class="number green" id="generalCount">0</div>
+                <div class="label">General</div>
+            </div>
+            <div class="stat-item">
+                <div class="number" id="bonesCount" style="color:#ffd93d;">0</div>
+                <div class="label">Bones</div>
+            </div>
+            <div class="stat-item">
+                <div class="number red" id="missingCount">0</div>
+                <div class="label">Missing</div>
+            </div>
+        </div>
+
+        <!-- Download Button -->
+        <button class="btn-download" id="downloadBtn">📥 Download ExtractedAlloffsets.txt</button>
+
+        <!-- Results Preview -->
+        <div class="results-preview" id="resultsPreview">
+            <pre id="resultsContent"></pre>
+        </div>
+
+        <!-- Missing List -->
+        <div class="missing-list" id="missingList" style="display:none;"></div>
+    </div>
+
+    <script>
+        (function() {
+            // ============ DOM Elements ============
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const removeFile = document.getElementById('removeFile');
+            const extractBtn = document.getElementById('extractBtn');
+            const status = document.getElementById('status');
+            const statsContainer = document.getElementById('statsContainer');
+            const totalCount = document.getElementById('totalCount');
+            const generalCount = document.getElementById('generalCount');
+            const bonesCount = document.getElementById('bonesCount');
+            const missingCount = document.getElementById('missingCount');
+            const resultsPreview = document.getElementById('resultsPreview');
+            const resultsContent = document.getElementById('resultsContent');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const missingList = document.getElementById('missingList');
+
+            let currentFile = null;
+            let currentResults = null;
+            let currentMissing = null;
+
+            // ============ File Handling ============
+            function handleFile(file) {
+                if (!file) return;
+                currentFile = file;
+                fileName.textContent = file.name;
+                fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+                fileInfo.classList.add('show');
+                extractBtn.classList.add('active');
+                status.className = 'status';
+                status.textContent = '';
+                resultsPreview.classList.remove('show');
+                downloadBtn.classList.remove('show');
+                statsContainer.style.display = 'none';
+                missingList.style.display = 'none';
+            }
+
+            function removeCurrentFile() {
+                currentFile = null;
+                fileInfo.classList.remove('show');
+                extractBtn.classList.remove('active');
+                fileInput.value = '';
+                status.className = 'status';
+                status.textContent = '';
+                resultsPreview.classList.remove('show');
+                downloadBtn.classList.remove('show');
+                statsContainer.style.display = 'none';
+                missingList.style.display = 'none';
+                currentResults = null;
+                currentMissing = null;
+            }
+
+            // Click to upload
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            // Drag and drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Remove file
+            removeFile.addEventListener('click', removeCurrentFile);
+
+            // ============ Main Extraction Logic ============
+            const primitiveTypes = new Set([
+                'int', 'float', 'bool', 'uint', 'byte', 'char', 'long', 'ulong',
+                'short', 'ushort', 'double', 'decimal', 'string', 'object', 'void'
+            ]);
+
+            function extractOffsets(content) {
+                const results = [];
+                const lines = content.split('\n');
+
+                // --- StaticClass ---
+                for (const line of lines) {
+                    if (line.includes('private float shb5;') && line.includes('0x5C')) {
+                        const offsetMatch = line.match(/0x[0-9A-Fa-f]+/);
+                        if (offsetMatch) {
+                            results.push({
+                                label: 'StaticClass',
+                                offset: offsetMatch[0],
+                                class: 'Unknown',
+                                typedef: 'N/A',
+                                line: line.trim(),
+                                type: 'float',
+                                field: 'shb5'
+                            });
+                            break;
+                        }
+                    }
+                }
+
+                // --- WeaponData (999999 constant) ---
+                const classPattern = /\/\/\s*Namespace:\s*COW\.GamePlay\s*\n\s*internal\s+class\s+(\w+)\s*:.*?IBridgingEntity\s*\/\/\s*TypeDefIndex:\s*(\d+)\s*\{([^}]*)\}/g;
+                let match;
+                const classMatches = [];
+                while ((match = classPattern.exec(content)) !== null) {
+                    classMatches.push(match);
+                }
+                for (const cm of classMatches) {
+                    const class_name = cm[1];
+                    const typedef = cm[2];
+                    const class_body = cm[3];
+                    if (class_body.includes('private const int') && class_body.includes('999999')) {
+                        const fieldPattern = /\[CompilerGenerated\]\s*\n\s*private\s+(\w+)\s+<(\w+)>k__BackingField;\s*\/\/\s*(0x[0-9A-Fa-f]+)/g;
+                        let fm;
+                        while ((fm = fieldPattern.exec(class_body)) !== null) {
+                            const field_type = fm[1];
+                            const field_name = fm[2];
+                            const offset = fm[3];
+                            if (!primitiveTypes.has(field_type)) {
+                                results.push({
+                                    label: 'WeaponData',
+                                    offset: offset,
+                                    class: class_name,
+                                    typedef: typedef,
+                                    line: `[CompilerGenerated]\nprivate ${field_type} <${field_name}>k__BackingField; // ${offset}`,
+                                    type: field_type,
+                                    field: field_name
+                                });
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                // --- Player class fields ---
+                const playerPattern = /internal\s+class\s+Player\s*:.*?TypeDefIndex:\s*(\d+)\s*\{([^}]*)\}/s;
+                const playerMatch = content.match(playerPattern);
+                if (playerMatch) {
+                    const typedef = playerMatch[1];
+                    const classBody = playerMatch[2];
+
+                    // Weapon
+                    const weaponMatch = classBody.match(/(?:public|protected|private|internal)\s+(\w+)\s+ActiveUISightingWeapon;\s*\/\/\s*(0x[0-9A-Fa-f]+)/);
+                    if (weaponMatch) {
+                        results.push({
+                            label: 'Weapon',
+                            offset: weaponMatch[2],
+                            class: 'Player',
+                            typedef: typedef,
+                            line: weaponMatch[0].trim(),
+                            type: weaponMatch[1],
+                            field: 'ActiveUISightingWeapon'
+                        });
+                    }
+
+                    // PlayerAttributes
+                    const attrMatch = classBody.match(/(?:public|protected|private|internal)\s+PlayerAttributes\s+(\w+);\s*\/\/\s*(0x[0-9A-Fa-f]+)/);
+                    if (attrMatch) {
+                        results.push({
+                            label: 'PlayerAttributes',
+                            offset: attrMatch[2],
+                            class: 'Player',
+                            typedef: typedef,
+                            line: attrMatch[0].trim(),
+                            type: 'PlayerAttributes',
+                            field: attrMatch[1]
+                        });
+                    }
+
+                    // FollowCamera
+                    const followcamMatch = classBody.match(/protected\s+FollowCamera\s+\w+;\s*\/\/\s*(0x[0-9A-Fa-f]+)/);
+                    if (followcamMatch) {
+                        const fieldNameMatch = followcamMatch[0].match(/protected\s+FollowCamera\s+(\w+);/);
+                        const fieldName = fieldNameMatch ? fieldNameMatch[1] : 'Unknown';
+                        results.push({
+                            label: 'FollowCamera',
+                            offset: followcamMatch[1],
+                            class: 'Player',
+                            typedef: typedef,
+                            line: `protected FollowCamera ${fieldName}; // ${followcamMatch[1]}`,
+                            type: 'FollowCamera',
+                            field: fieldName
+                        });
+                    }
+
+                    // AimRotation
+                    const aimrotationMatch = classBody.match(/\[CompilerGenerated\]\s*\n\s*private\s+Quaternion\s+<(\w+)>k__BackingField;\s*\/\/\s*(0x[0-9A-Fa-f]+)/);
+                    if (aimrotationMatch) {
+                        results.push({
+                            label: 'AimRotation',
+                            offset: aimrotationMatch[2],
+                            class: 'Player',
+                            typedef: typedef,
+                            line: `[CompilerGenerated]\nprivate Quaternion <${aimrotationMatch[1]}>k__BackingField; // ${aimrotationMatch[2]}`,
+                            type: 'Quaternion',
+                            field: aimrotationMatch[1]
+                        });
+                    }
+                }
+
+                // --- NoReload ---
+                const noreloadMatch = content.match(/public\s+bool\s+ShootNoReload;\s*\/\/\s*(0x[0-9A-Fa-f]+)/);
+                if (noreloadMatch) {
+                    const before = content.substring(0, noreloadMatch.index);
+                    const classMatch2 = before.match(/internal\s+class\s+(\w+)/);
+                    const className2 = classMatch2 ? classMatch2[1] : 'Unknown';
+                    const typedefMatch2 = before.match(/TypeDefIndex:\s*(\d+)/);
+                    const typedef2 = typedefMatch2 ? typedefMatch2[1] : 'Unknown';
+                    results.push({
+                        label: 'NoReload',
+                        offset: noreloadMatch[1],
+                        class: className2,
+                        typedef: typedef2,
+                        line: `public bool ShootNoReload; // ${noreloadMatch[1]}`,
+                        type: 'bool',
+                        field: 'ShootNoReload'
+                    });
+                }
+
+                // --- WeaponRecoil ---
+                const recoilPattern = /\/\/\s*Namespace:\s*COW\.GamePlay\s*\n\s*internal\s+class\s+(\w+)\s*:\s*(\w+)\s*\/\/\s*TypeDefIndex:\s*(\d+)\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n\s*private\s+float\s+(\w+);\s*\/\/\s*([^\n]+)\s*\n\s*\/\/\s*Methods/g;
+                const recoilMatches = [];
+                let rm;
+                while ((rm = recoilPattern.exec(content)) !== null) {
+                    recoilMatches.push(rm);
+                }
+                if (recoilMatches.length >= 3) {
+                    const r = recoilMatches[2];
+                    results.push({
+                        label: 'WeaponRecoil',
+                        offset: r[4].trim(),
+                        class: r[1],
+                        typedef: r[3],
+                        line: `private float ${r[4]}; // ${r[5].trim()}`,
+                        type: 'float',
+                        field: r[4]
+                    });
+                }
+
+                // --- CurrentBehaviour / CurrentObserver ---
+                for (let i = 0; i < lines.length - 3; i++) {
+                    const line1 = lines[i].trim();
+                    const line2 = lines[i+1].trim();
+                    const line3 = lines[i+2].trim();
+                    const line4 = lines[i+3].trim();
+                    
+                    if (!line1.startsWith('protected') || !line2.startsWith('protected') || 
+                        !line3.startsWith('protected') || !line4.startsWith('protected')) continue;
+                    if (!line4.includes('Dictionary') || !line4.includes(', int>')) continue;
+                    if (line1.includes('Dictionary') || line2.includes('Dictionary') || line3.includes('Dictionary')) continue;
+                    
+                    const type1 = line1.split(/\s+/)[1];
+                    const type2 = line2.split(/\s+/)[1];
+                    const type3 = line3.split(/\s+/)[1];
+                    if (primitiveTypes.has(type1) || primitiveTypes.has(type2) || primitiveTypes.has(type3)) continue;
+                    
+                    const dictMatch = line4.match(/Dictionary<([^,]+),\s*int>/);
+                    if (dictMatch && primitiveTypes.has(dictMatch[1])) continue;
+                    
+                    const offsetMatch = line1.match(/0x[0-9A-Fa-f]+/);
+                    if (offsetMatch) {
+                        results.push({
+                            label: 'CurrentBehaviour / CurrentObserver',
+                            offset: offsetMatch[0],
+                            class: 'Unknown',
+                            typedef: 'N/A',
+                            line: line1,
+                            type: type1,
+                            field: line1.split(/\s+/)[2] || 'Unknown'
+                        });
+                        break;
+                    }
+                }
+
+                // --- ObserverPlayer ---
+                for (let i = 0; i < lines.length - 1; i++) {
+                    const line1 = lines[i].trim();
+                    const line2 = lines[i+1].trim();
+                    if (!line1.includes('k__BackingField;')) continue;
+                    if (!line2.startsWith('private Player ')) continue;
+                    const offsetMatch = line2.match(/0x[0-9A-Fa-f]+/);
+                    if (offsetMatch) {
+                        const fieldMatch = line2.match(/private Player (\w+);/);
+                        results.push({
+                            label: 'ObserverPlayer',
+                            offset: offsetMatch[0],
+                            class: 'Unknown',
+                            typedef: 'N/A',
+                            line: line2,
+                            type: 'Player',
+                            field: fieldMatch ? fieldMatch[1] : 'Unknown'
+                        });
+                        break;
+                    }
+                }
+
+                // --- MatchStatus ---
+                for (let i = 0; i < lines.length - 2; i++) {
+                    const line1 = lines[i].trim();
+                    const line2 = lines[i+1].trim();
+                    const line3 = lines[i+2].trim();
+                    if (!line1.startsWith('private bool ')) continue;
+                    if (!line2.startsWith('protected ') || !line2.includes('.')) continue;
+                    if (!line3.startsWith('protected GameObject ')) continue;
+                    const offsetMatch = line2.match(/0x[0-9A-Fa-f]+/);
+                    if (offsetMatch) {
+                        const fieldMatch = line2.match(/protected\s+[\w.]+\s+(\w+);/);
+                        const typeMatch = line2.match(/protected\s+([\w.]+)\s+\w+;/);
+                        results.push({
+                            label: 'MatchStatus',
+                            offset: offsetMatch[0],
+                            class: 'Unknown',
+                            typedef: 'N/A',
+                            line: line2,
+                            type: typeMatch ? typeMatch[1] : 'Unknown',
+                            field: fieldMatch ? fieldMatch[1] : 'Unknown'
+                        });
+                        break;
+                    }
+                }
+
+                // --- LocalPlayer ---
+                for (let i = 0; i < lines.length - 1; i++) {
+                    const line1 = lines[i].trim();
+                    const line2 = lines[i+1].trim();
+                    if (!line1.startsWith('protected GameObject ')) continue;
+                    if (!line2.startsWith('protected Player ')) continue;
+                    const offsetMatch = line2.match(/0x[0-9A-Fa-f]+/);
+                    if (offsetMatch) {
+                        const fieldMatch = line2.match(/protected Player (\w+);/);
+                        results.push({
+                            label: 'LocalPlayer',
+                            offset: offsetMatch[0],
+                            class: 'Unknown',
+                            typedef: 'N/A',
+                            line: line2,
+                            type: 'Player',
+                            field: fieldMatch ? fieldMatch[1] : 'Unknown'
+                        });
+                        break;
+                    }
+                }
+
+                // --- CurrentMatch ---
+                const currentMatchPattern = /\/\/\s*Namespace:\s*COW\s*\n\s*internal\s+abstract\s+class\s+MatchGame\s*:\s*COWGameBase\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n\s*protected\s+(\w+)\s+m_Match;\s*\/\/\s*(0x[0-9A-Fa-f]+)/;
+                const cmMatch = content.match(currentMatchPattern);
+                if (cmMatch) {
+                    results.push({
+                        label: 'CurrentMatch',
+                        offset: cmMatch[2],
+                        class: 'MatchGame',
+                        typedef: 'N/A',
+                        line: `protected ${cmMatch[1]} m_Match; // ${cmMatch[2]}`,
+                        type: cmMatch[1],
+                        field: 'm_Match'
+                    });
+                }
+
+                // --- Camera / MainCamera ---
+                const mainCameraPattern = /\/\/\s*Namespace:\s*COW\s*\n\s*internal\s+class\s+VehicleMarkController\s*:\s*MonoBehaviour\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n.*?private\s+Camera\s+m_mainCamera;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const mcMatch = content.match(mainCameraPattern);
+                if (mcMatch) {
+                    results.push({
+                        label: 'Camera / MainCamera',
+                        offset: mcMatch[1],
+                        class: 'VehicleMarkController',
+                        typedef: 'N/A',
+                        line: `private Camera m_mainCamera; // ${mcMatch[1]}`,
+                        type: 'Camera',
+                        field: 'm_mainCamera'
+                    });
+                }
+
+                // --- Player_Data ---
+                for (let i = 0; i < lines.length - 3; i++) {
+                    const line1 = lines[i].trim();
+                    const line2 = lines[i+1].trim();
+                    const line3 = lines[i+2].trim();
+                    const line4 = lines[i+3].trim();
+                    if (!line1.startsWith('public static Player.') || !line1.includes('HudPlayerSkillPassiveCDAnimEvt')) continue;
+                    if (!line2.startsWith('public static Player.') || !line2.includes('HudPetSkillCDAnimEvt')) continue;
+                    if (!line3.startsWith('public static Player.') || !line3.includes('m_LocalPlayerHitEvt')) continue;
+                    if (!line4.startsWith('public static Player.') || !line4.includes('m_LPickupAreaEvt')) continue;
+                    const offsetMatch = line2.match(/0x[0-9A-Fa-f]+/);
+                    if (offsetMatch) {
+                        const typeMatch = line2.match(/public static Player\.(\w+)\s+HudPetSkillCDAnimEvt;/);
+                        results.push({
+                            label: 'Player_Data',
+                            offset: offsetMatch[0],
+                            class: 'Player',
+                            typedef: 'N/A',
+                            line: line2,
+                            type: `Player.${typeMatch ? typeMatch[1] : 'Unknown'}`,
+                            field: 'HudPetSkillCDAnimEvt'
+                        });
+                        break;
+                    }
+                }
+
+                // --- Avatar ---
+                const avatarPattern = /\/\/\s*Namespace:\s*COW\.GamePlay\s*\n\s*internal\s+class\s+AvatarManager\s*:\s*MonoBehaviour\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n.*?internal\s+IUmaAvatar\s+(\w+);\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const avMatch = content.match(avatarPattern);
+                if (avMatch) {
+                    results.push({
+                        label: 'Avatar',
+                        offset: avMatch[2],
+                        class: 'AvatarManager',
+                        typedef: 'N/A',
+                        line: `internal IUmaAvatar ${avMatch[1]}; // ${avMatch[2]}`,
+                        type: 'IUmaAvatar',
+                        field: avMatch[1]
+                    });
+                }
+
+                // --- AvatarManager ---
+                const avatarMgrPattern = /internal\s+class\s+Player\s*:.*?TypeDefIndex:\s*\d+\s*\{[^}]*protected\s+AvatarManager\s+(\w+);\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const amMatch = content.match(avatarMgrPattern);
+                if (amMatch) {
+                    results.push({
+                        label: 'AvatarManager',
+                        offset: amMatch[2],
+                        class: 'Player',
+                        typedef: 'N/A',
+                        line: `protected AvatarManager ${amMatch[1]}; // ${amMatch[2]}`,
+                        type: 'AvatarManager',
+                        field: amMatch[1]
+                    });
+                }
+
+                // --- ShadowState ---
+                const shadowPattern = /internal\s+class\s+PlayerNetwork\s*:.*?TypeDefIndex:\s*\d+\s*\{[^}]*public\s+PlayerNetwork\.(\w+)\s+m_ShadowState;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const shMatch = content.match(shadowPattern);
+                if (shMatch) {
+                    results.push({
+                        label: 'ShadowState',
+                        offset: shMatch[2],
+                        class: 'PlayerNetwork',
+                        typedef: 'N/A',
+                        line: `public PlayerNetwork.${shMatch[1]} m_ShadowState; // ${shMatch[2]}`,
+                        type: `PlayerNetwork.${shMatch[1]}`,
+                        field: 'm_ShadowState'
+                    });
+                }
+
+                // --- Avatar_Data ---
+                const avatarDataPattern = /\[CompilerGenerated\]\s*\n\s*private\s+sealed\s+class\s+UIPresetAgentBubbleController\.<>c__DisplayClass23_0\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n.*?public\s+uint\s+avatarId;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const adMatch = content.match(avatarDataPattern);
+                if (adMatch) {
+                    results.push({
+                        label: 'Avatar_Data',
+                        offset: adMatch[1],
+                        class: 'UIPresetAgentBubbleController.<>c__DisplayClass23_0',
+                        typedef: 'N/A',
+                        line: `public uint avatarId; // ${adMatch[1]}`,
+                        type: 'uint',
+                        field: 'avatarId'
+                    });
+                }
+
+                // --- Avatar_Data_IsTeam ---
+                const isTeamPattern = /public\s+class\s+UMAData\s*:\s*MonoBehaviour\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n.*?public\s+bool\s+isTeammate;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const itMatch = content.match(isTeamPattern);
+                if (itMatch) {
+                    results.push({
+                        label: 'Avatar_Data_IsTeam',
+                        offset: itMatch[1],
+                        class: 'UMAData',
+                        typedef: 'N/A',
+                        line: `public bool isTeammate; // ${itMatch[1]}`,
+                        type: 'bool',
+                        field: 'isTeammate'
+                    });
+                }
+
+                // --- Avatar_IsVisible ---
+                const visiblePattern = /public\s+class\s+UmaAvatarSimple\s*:\s*UMAAvatarBase\s*,\s*IUmaAvatar\s*,\s*IUmaAvatarWithSlots\s*,\s*IUmaAvatarBase\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n.*?private\s+bool\s+IsVisible;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const visMatch = content.match(visiblePattern);
+                if (visMatch) {
+                    results.push({
+                        label: 'Avatar_IsVisible',
+                        offset: visMatch[1],
+                        class: 'UmaAvatarSimple',
+                        typedef: 'N/A',
+                        line: `private bool IsVisible; // ${visMatch[1]}`,
+                        type: 'bool',
+                        field: 'IsVisible'
+                    });
+                }
+
+                // --- IsFiring (last TBTAction) ---
+                const tbtactionIndices = [];
+                lines.forEach((line, idx) => {
+                    if (line.trim().startsWith('protected TBTAction ')) tbtactionIndices.push(idx);
+                });
+                if (tbtactionIndices.length > 0) {
+                    const lastIdx = tbtactionIndices[tbtactionIndices.length - 1];
+                    for (let i = lastIdx + 1; i < Math.min(lastIdx + 10, lines.length); i++) {
+                        const line = lines[i].trim();
+                        if (line.includes('[CompilerGenerated]')) {
+                            if (i + 1 < lines.length) {
+                                const nextLine = lines[i + 1].trim();
+                                if (nextLine.startsWith('private bool <') && nextLine.includes('k__BackingField;')) {
+                                    const offsetMatch = nextLine.match(/0x[0-9A-Fa-f]+/);
+                                    if (offsetMatch) {
+                                        const fieldMatch = nextLine.match(/<(\w+)>/);
+                                        results.push({
+                                            label: 'IsFiring',
+                                            offset: offsetMatch[0],
+                                            class: 'Player',
+                                            typedef: 'N/A',
+                                            line: `[CompilerGenerated]\nprivate bool <${fieldMatch ? fieldMatch[1] : 'Unknown'}>k__BackingField; // ${offsetMatch[0]}`,
+                                            type: 'bool',
+                                            field: `<${fieldMatch ? fieldMatch[1] : 'Unknown'}>k__BackingField`
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- Player_IsDead ---
+                const deadPattern = /\/\/\s*Namespace:\s*COW\.GamePlay.*?internal\s+abstract\s+class\s+AttackableEntity\s*:.*?TypeDefIndex:\s*\d+\s*\{([^}]*)\}/s;
+                const deadMatch = content.match(deadPattern);
+                if (deadMatch) {
+                    const classBody = deadMatch[1];
+                    const boolMatch = classBody.match(/private\s+bool\s+(\w+);\s*\/\/\s*(0x[0-9A-Fa-f]+)/);
+                    if (boolMatch) {
+                        results.push({
+                            label: 'Player_IsDead',
+                            offset: boolMatch[2],
+                            class: 'AttackableEntity',
+                            typedef: 'N/A',
+                            line: `private bool ${boolMatch[1]}; // ${boolMatch[2]}`,
+                            type: 'bool',
+                            field: boolMatch[1]
+                        });
+                    }
+                }
+
+                // --- Player_Name ---
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('public uint ServerGameMusicShootingIndex;')) {
+                        if (i + 2 < lines.length) {
+                            const targetLine = lines[i + 2].trim();
+                            const offsetMatch = targetLine.match(/0x[0-9A-Fa-f]+/);
+                            if (offsetMatch) {
+                                const parts = targetLine.split(/\s+/);
+                                if (parts.length >= 3) {
+                                    const fieldName = parts[2].replace(';', '');
+                                    results.push({
+                                        label: 'Player_Name',
+                                        offset: offsetMatch[0],
+                                        class: 'Player',
+                                        typedef: 'N/A',
+                                        line: targetLine,
+                                        type: 'string',
+                                        field: fieldName
+                                    });
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                // --- XPose ---
+                let classStart = -1;
+                for (let idx = 0; idx < lines.length; idx++) {
+                    if (lines[idx].includes('public class PlayerNetwork.') && lines[idx].includes('TypeDefIndex:')) {
+                        classStart = idx;
+                        break;
+                    }
+                }
+                if (classStart !== -1) {
+                    let braceLine = -1;
+                    for (let idx = classStart; idx < lines.length; idx++) {
+                        if (lines[idx].includes('{')) { braceLine = idx; break; }
+                    }
+                    if (braceLine !== -1) {
+                        let braceCount = 0;
+                        let endLine = -1;
+                        for (let idx = braceLine; idx < lines.length; idx++) {
+                            braceCount += (lines[idx].match(/{/g) || []).length;
+                            braceCount -= (lines[idx].match(/}/g) || []).length;
+                            if (braceCount === 0) { endLine = idx; break; }
+                        }
+                        if (endLine !== -1) {
+                            const classBodyLines = lines.slice(braceLine + 1, endLine);
+                            for (let i = 0; i < classBodyLines.length - 2; i++) {
+                                const line1 = classBodyLines[i].trim();
+                                const line2 = classBodyLines[i+1].trim();
+                                const line3 = classBodyLines[i+2].trim();
+                                if (!line1.startsWith('public Player.')) continue;
+                                if (!line3.startsWith('public float ')) continue;
+                                const offsetMatch = line2.match(/0x[0-9A-Fa-f]+/);
+                                if (offsetMatch) {
+                                    const fieldMatch = line2.match(/public\s+(\w+)\s+(\w+);/);
+                                    results.push({
+                                        label: 'XPose',
+                                        offset: offsetMatch[0],
+                                        class: 'PlayerNetwork',
+                                        typedef: 'N/A',
+                                        line: line2,
+                                        type: fieldMatch ? fieldMatch[1] : 'Unknown',
+                                        field: fieldMatch ? fieldMatch[2] : 'Unknown'
+                                    });
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- AimbotVisible ---
+                let itransformCount = 0;
+                for (const line of lines) {
+                    const stripped = line.trim();
+                    if (stripped.startsWith('protected ITransformNode ')) {
+                        itransformCount++;
+                    } else if (itransformCount >= 6 && stripped.startsWith('protected Collider ')) {
+                        const offsetMatch = stripped.match(/0x[0-9A-Fa-f]+/);
+                        if (offsetMatch) {
+                            const fieldMatch = stripped.match(/protected Collider (\w+);/);
+                            results.push({
+                                label: 'AimbotVisible',
+                                offset: offsetMatch[0],
+                                class: 'Player',
+                                typedef: 'N/A',
+                                line: stripped,
+                                type: 'Collider',
+                                field: fieldMatch ? fieldMatch[1] : 'Unknown'
+                            });
+                            break;
+                        }
+                    } else if (stripped && !stripped.startsWith('protected ITransformNode ') && !stripped.startsWith('protected Collider ')) {
+                        if (itransformCount < 6) itransformCount = 0;
+                    }
+                }
+
+                // --- MainCameraTransform ---
+                for (const line of lines) {
+                    const stripped = line.trim();
+                    if (stripped.includes('public Transform MainCameraTransform;')) {
+                        const offsetMatch = stripped.match(/0x[0-9A-Fa-f]+/);
+                        if (offsetMatch) {
+                            results.push({
+                                label: 'MainCameraTransform',
+                                offset: offsetMatch[0],
+                                class: 'Player',
+                                typedef: 'N/A',
+                                line: stripped,
+                                type: 'Transform',
+                                field: 'MainCameraTransform'
+                            });
+                            break;
+                        }
+                    }
+                }
+
+                // --- DictionaryEntities ---
+                const dictPattern = /\/\/\s*Namespace:\s*COW\s*\n\s*internal\s+abstract\s+class\s+MatchGame\s*:\s*COWGameBase\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n.*?protected\s+Dictionary<uint,\s*ReplicationEntity>\s+m_ReplicationEntitis;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const dictMatch = content.match(dictPattern);
+                if (dictMatch) {
+                    results.push({
+                        label: 'DictionaryEntities',
+                        offset: dictMatch[1],
+                        class: 'MatchGame',
+                        typedef: 'N/A',
+                        line: `protected Dictionary<uint, ReplicationEntity> m_ReplicationEntitis; // ${dictMatch[1]}`,
+                        type: 'Dictionary<uint, ReplicationEntity>',
+                        field: 'm_ReplicationEntitis'
+                    });
+                }
+
+                // --- sAim1 / IS_FIRING ---
+                if (tbtactionIndices.length > 0) {
+                    const lastIdx = tbtactionIndices[tbtactionIndices.length - 1];
+                    for (let i = lastIdx + 1; i < Math.min(lastIdx + 10, lines.length); i++) {
+                        const line = lines[i].trim();
+                        if (line.includes('[CompilerGenerated]')) {
+                            if (i + 1 < lines.length) {
+                                const nextLine = lines[i + 1].trim();
+                                if (nextLine.startsWith('private bool <') && nextLine.includes('k__BackingField;')) {
+                                    const offsetMatch = nextLine.match(/0x[0-9A-Fa-f]+/);
+                                    if (offsetMatch) {
+                                        const fieldMatch = nextLine.match(/<(\w+)>/);
+                                        results.push({
+                                            label: 'sAim1 / IS_FIRING',
+                                            offset: offsetMatch[0],
+                                            class: 'Player',
+                                            typedef: 'N/A',
+                                            line: `[CompilerGenerated]\nprivate bool <${fieldMatch ? fieldMatch[1] : 'Unknown'}>k__BackingField; // ${offsetMatch[0]}`,
+                                            type: 'bool',
+                                            field: `<${fieldMatch ? fieldMatch[1] : 'Unknown'}>k__BackingField`
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- sAim2 / weaponinfo ---
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('public float m_MaxAngleX;')) {
+                        if (i + 5 < lines.length) {
+                            const target = lines[i + 5].trim();
+                            const offsetMatch = target.match(/0x[0-9A-Fa-f]+/);
+                            if (offsetMatch) {
+                                const fieldMatch = target.match(/private\s+(\w+)\s+(\w+);/);
+                                results.push({
+                                    label: 'sAim2 / weaponinfo',
+                                    offset: offsetMatch[0],
+                                    class: 'Player',
+                                    typedef: 'N/A',
+                                    line: target,
+                                    type: fieldMatch ? fieldMatch[1] : 'Unknown',
+                                    field: fieldMatch ? fieldMatch[2] : 'Unknown'
+                                });
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                // --- sAim3 / guntipposition ---
+                for (let i = 0; i < lines.length; i++) {
+                    if (!lines[i].includes('// Namespace: COW.GamePlay')) continue;
+                    let classLine = -1;
+                    for (let j = i+1; j < Math.min(i+5, lines.length); j++) {
+                        if (lines[j].includes('public class') && lines[j].includes('ObjectPoolCallbackBase') && lines[j].includes('TypeDefIndex:')) {
+                            classLine = j;
+                            break;
+                        }
+                    }
+                    if (classLine === -1) continue;
+                    let braceLine2 = -1;
+                    for (let j = classLine; j < lines.length; j++) {
+                        if (lines[j].includes('{')) { braceLine2 = j; break; }
+                    }
+                    if (braceLine2 === -1) continue;
+                    let braceCount2 = 0;
+                    let endLine2 = -1;
+                    for (let j = braceLine2; j < lines.length; j++) {
+                        braceCount2 += (lines[j].match(/{/g) || []).length;
+                        braceCount2 -= (lines[j].match(/}/g) || []).length;
+                        if (braceCount2 === 0) { endLine2 = j; break; }
+                    }
+                    if (endLine2 === -1) continue;
+                    const classBody2 = lines.slice(braceLine2 + 1, endLine2);
+                    const cleanBody = classBody2.map(ln => ln.trim()).filter(ln => ln);
+                    let skipClass = false;
+                    for (const firstLine of cleanBody.slice(0, 3)) {
+                        if (firstLine.startsWith('public uint ')) { skipClass = true; break; }
+                    }
+                    if (skipClass) continue;
+                    if (cleanBody.length >= 8) {
+                        const target = cleanBody[7];
+                        const offsetMatch = target.match(/0x[0-9A-Fa-f]+/);
+                        if (offsetMatch) {
+                            const fieldMatch = target.match(/public Vector3 (\w+);/);
+                            results.push({
+                                label: 'sAim3 / guntipposition',
+                                offset: offsetMatch[0],
+                                class: 'ObjectPoolCallbackBase',
+                                typedef: 'N/A',
+                                line: target,
+                                type: 'Vector3',
+                                field: fieldMatch ? fieldMatch[1] : 'Vector3_4th'
+                            });
+                            break;
+                        }
+                    }
+                }
+
+                // --- sAim4 / bullet_hit ---
+                for (let i = 0; i < lines.length; i++) {
+                    if (!lines[i].includes('// Namespace: COW.GamePlay')) continue;
+                    let classLine = -1;
+                    for (let j = i+1; j < Math.min(i+5, lines.length); j++) {
+                        if (lines[j].includes('public class') && lines[j].includes('ObjectPoolCallbackBase') && lines[j].includes('TypeDefIndex:')) {
+                            classLine = j;
+                            break;
+                        }
+                    }
+                    if (classLine === -1) continue;
+                    let braceLine2 = -1;
+                    for (let j = classLine; j < lines.length; j++) {
+                        if (lines[j].includes('{')) { braceLine2 = j; break; }
+                    }
+                    if (braceLine2 === -1) continue;
+                    let braceCount2 = 0;
+                    let endLine2 = -1;
+                    for (let j = braceLine2; j < lines.length; j++) {
+                        braceCount2 += (lines[j].match(/{/g) || []).length;
+                        braceCount2 -= (lines[j].match(/}/g) || []).length;
+                        if (braceCount2 === 0) { endLine2 = j; break; }
+                    }
+                    if (endLine2 === -1) continue;
+                    const classBody2 = lines.slice(braceLine2 + 1, endLine2);
+                    const cleanBody = classBody2.map(ln => ln.trim()).filter(ln => ln);
+                    let skipClass = false;
+                    for (const firstLine of cleanBody.slice(0, 3)) {
+                        if (firstLine.startsWith('public uint ')) { skipClass = true; break; }
+                    }
+                    if (skipClass) continue;
+                    if (cleanBody.length >= 8) {
+                        const target = cleanBody[6];
+                        const offsetMatch = target.match(/0x[0-9A-Fa-f]+/);
+                        if (offsetMatch) {
+                            const fieldMatch = target.match(/public Vector3 (\w+);/);
+                            results.push({
+                                label: 'sAim4 / bullet_hit',
+                                offset: offsetMatch[0],
+                                class: 'ObjectPoolCallbackBase',
+                                typedef: 'N/A',
+                                line: target,
+                                type: 'Vector3',
+                                field: fieldMatch ? fieldMatch[1] : 'Vector3_4th'
+                            });
+                            break;
+                        }
+                    }
+                }
+
+                // --- FixedDeltaTime ---
+                const fdtPattern = /public\s+class\s+TimeService.*?TypeDefIndex:\s*\d+\s*\{[^}]*private\s+float\s+m_FixedDeltaTime;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const fdtMatch = content.match(fdtPattern);
+                if (fdtMatch) {
+                    results.push({
+                        label: 'FixedDeltaTime',
+                        offset: fdtMatch[1],
+                        class: 'TimeService',
+                        typedef: 'N/A',
+                        line: `private float m_FixedDeltaTime; // ${fdtMatch[1]}`,
+                        type: 'float',
+                        field: 'm_FixedDeltaTime'
+                    });
+                }
+
+                // --- pomba ---
+                if (tbtactionIndices.length > 0) {
+                    const lastIdx = tbtactionIndices[tbtactionIndices.length - 1];
+                    for (let i = lastIdx + 1; i < Math.min(lastIdx + 10, lines.length); i++) {
+                        const line = lines[i].trim();
+                        if (line.includes('[CompilerGenerated]')) {
+                            if (i + 1 < lines.length) {
+                                const nextLine = lines[i + 1].trim();
+                                if (nextLine.startsWith('private bool <') && nextLine.includes('k__BackingField;')) {
+                                    const offsetMatch = nextLine.match(/0x[0-9A-Fa-f]+/);
+                                    if (offsetMatch) {
+                                        const fieldMatch = nextLine.match(/<(\w+)>/);
+                                        results.push({
+                                            label: 'pomba',
+                                            offset: offsetMatch[0],
+                                            class: 'Player',
+                                            typedef: 'N/A',
+                                            line: `[CompilerGenerated]\nprivate bool <${fieldMatch ? fieldMatch[1] : 'Unknown'}>k__BackingField; // ${offsetMatch[0]}`,
+                                            type: 'bool',
+                                            field: `<${fieldMatch ? fieldMatch[1] : 'Unknown'}>k__BackingField`
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- InSnowSlideWayDashing ---
+                const snowPattern = /internal\s+class\s+Player.*?TypeDefIndex:\s*\d+\s*\{[^}]*public\s+bool\s+InSnowSlideWayDashing;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const snowMatch = content.match(snowPattern);
+                if (snowMatch) {
+                    results.push({
+                        label: 'InSnowSlideWayDashing',
+                        offset: snowMatch[1],
+                        class: 'Player',
+                        typedef: 'N/A',
+                        line: `public bool InSnowSlideWayDashing; // ${snowMatch[1]}`,
+                        type: 'bool',
+                        field: 'InSnowSlideWayDashing'
+                    });
+                }
+
+                // --- GameTimer ---
+                const gtPattern = /\/\/\s*Namespace:\s*GCommon.*?public\s+class\s+TimeService\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n.*?private\s+float\s+m_DeltaTime;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const gtMatch = content.match(gtPattern);
+                if (gtMatch) {
+                    results.push({
+                        label: 'GameTimer',
+                        offset: gtMatch[1],
+                        class: 'TimeService',
+                        typedef: 'N/A',
+                        line: `private float m_DeltaTime; // ${gtMatch[1]}`,
+                        type: 'float',
+                        field: 'm_DeltaTime'
+                    });
+                }
+
+                // --- ViewMatrix ---
+                const vmPattern = /\/\/\s*Namespace:\s*UnityEngine\.UIElements.*?internal\s+abstract\s+class\s+BaseRuntimePanel\s*:\s*Panel\s*\/\/\s*TypeDefIndex:\s*\d+\s*\n\{\s*\n.*?internal\s+Matrix4x4\s+panelToWorld;\s*\/\/\s*(0x[0-9A-Fa-f]+)/s;
+                const vmMatch = content.match(vmPattern);
+                if (vmMatch) {
+                    results.push({
+                        label: 'ViewMatrix',
+                        offset: vmMatch[1],
+                        class: 'BaseRuntimePanel',
+                        typedef: 'N/A',
+                        line: `internal Matrix4x4 panelToWorld; // ${vmMatch[1]}`,
+                        type: 'Matrix4x4',
+                        field: 'panelToWorld'
+                    });
+                }
+
+                // --- BONES: Head, LeftWrist, Root, Spine, Hip, RightCalf, LeftCalf, RightFoot, LeftFoot, RightWrist, LeftHand, LeftShoulder, RightShoulder, RightWristJoint, LeftWristJoint, LeftElbow, RightElbow ---
+                const boneLabels = [
+                    { label: 'Head', offset: 2 },
+                    { label: 'LeftWrist', offset: 1 },
+                    { label: 'Spine', offset: 4 },
+                    { label: 'Hip', offset: 6 },
+                    { label: 'Root', offset: 7 },
+                    { label: 'RightCalf', offset: 8 },
+                    { label: 'LeftCalf', offset: 9 },
+                    { label: 'RightFoot', offset: 10 },
+                    { label: 'LeftFoot', offset: 11 },
+                    { label: 'RightWrist', offset: 12 },
+                    { label: 'LeftHand', offset: 13 },
+                    { label: 'LeftShoulder', offset: 15 },
+                    { label: 'RightShoulder', offset: 16 },
+                    { label: 'RightWristJoint', offset: 17 },
+                    { label: 'LeftWristJoint', offset: 18 },
+                    { label: 'LeftElbow', offset: 19 },
+                    { label: 'RightElbow', offset: 20 }
+                ];
+
+                for (let i = 0; i < lines.length; i++) {
+                    const stripped = lines[i].trim();
+                    if (stripped.startsWith('protected FollowCamera ')) {
+                        for (const bone of boneLabels) {
+                            if (i + bone.offset < lines.length) {
+                                const target = lines[i + bone.offset].trim();
+                                const offsetMatch = target.match(/0x[0-9A-Fa-f]+/);
+                                if (offsetMatch) {
+                                    const fieldMatch = target.match(/protected\s+(\w+)\s+(\w+);/);
+                                    results.push({
+                                        label: bone.label,
+                                        category: 'Bones',
+                                        offset: offsetMatch[0],
+                                        class: 'Player',
+                                        typedef: 'N/A',
+                                        line: target,
+                                        type: fieldMatch ? fieldMatch[1] : 'Unknown',
+                                        field: fieldMatch ? fieldMatch[2] : 'Unknown'
+                                    });
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                // --- Player_ShadowBase ---
+                for (const line of lines) {
+                    const stripped = line.trim();
+                    if (stripped.startsWith('public PlayerNetwork.') && stripped.includes('m_ShadowState;')) {
+                        const offsetMatch = stripped.match(/0x[0-9A-Fa-f]+/);
+                        if (offsetMatch) {
+                            const fieldMatch = stripped.match(/public PlayerNetwork\.(\w+)\s+m_ShadowState;/);
+                            results.push({
+                                label: 'Player_ShadowBase',
+                                offset: offsetMatch[0],
+                                class: 'PlayerNetwork',
+                                typedef: 'N/A',
+                                line: stripped,
+                                type: `PlayerNetwork.${fieldMatch ? fieldMatch[1] : 'Unknown'}`,
+                                field: 'm_ShadowState'
+                            });
+                            break;
+                        }
+                    }
+                }
+                // ==========================================
+                // 🆕 UNLIMITED AMMO - PlayerAttributes Class
+                // ==========================================
+                let foundUnlimitedAmmo = false;
+                let foundPlayerAttributes = false;
+                let foundTalentWeapon = false;
+                let compilerGeneratedCount = 0;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    // Check if we are in PlayerAttributes class
+                    if (line.includes('internal class PlayerAttributes') && 
+                        (i > 0 && lines[i-1].includes('// Namespace: COW.GamePlay'))) {
+                        foundPlayerAttributes = true;
+                        continue;
+                    }
+                    
+                    if (foundPlayerAttributes) {
+                        // Look for TalentWeaponAmmoClip
+                        if (line.includes('public int TalentWeaponAmmoClip;')) {
+                            foundTalentWeapon = true;
+                            continue;
+                        }
+                        
+                        // After finding TalentWeaponAmmoClip, count [CompilerGenerated]
+                        if (foundTalentWeapon) {
+                            if (line.includes('[CompilerGenerated]')) {
+                                compilerGeneratedCount++;
+                            }
+                            
+                            // After 3 [CompilerGenerated], get the next line (Unlimited Ammo)
+                            if (compilerGeneratedCount === 3) {
+                                if (i + 1 < lines.length) {
+                                    const targetLine = lines[i + 1].trim();
+                                    const offsetMatch = targetLine.match(/0x[0-9A-Fa-f]+/);
+                                    if (offsetMatch) {
+                                        const fieldMatch = targetLine.match(/private\s+(\w+)\s+<(\w+)>k__BackingField;/);
+                                        const fieldType = fieldMatch ? fieldMatch[1] : 'bool';
+                                        const fieldName = fieldMatch ? `<${fieldMatch[2]}>k__BackingField` : 'Unknown';
+                                        
+                                        results.push({
+                                            label: 'UnlimitedAmmo',
+                                            offset: offsetMatch[0],
+                                            class: 'PlayerAttributes',
+                                            typedef: 'N/A',
+                                            line: targetLine,
+                                            type: fieldType,
+                                            field: fieldName
+                                        });
+                                        foundUnlimitedAmmo = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return results;
+            }
+
+            // ============ Expected Offsets for Missing Detection ============
+            const expectedOffsets = {
+                'StaticClass': { pattern: 'private float shb5.*0x5C', class: 'Unknown', manual: 'Search for "private float shb5; // 0x5C"' },
+                'WeaponData': { pattern: 'private const int.*999999', class: 'COW.GamePlay', manual: 'Search for "999999" in the file' },
+                'Weapon': { pattern: 'ActiveUISightingWeapon', class: 'Player', manual: 'In Player class, search for "ActiveUISightingWeapon"' },
+                'PlayerAttributes': { pattern: 'PlayerAttributes', class: 'Player', manual: 'In Player class, search for "PlayerAttributes"' },
+                'FollowCamera': { pattern: 'protected FollowCamera', class: 'Player', manual: 'In Player class, search for "protected FollowCamera"' },
+                'AimRotation': { pattern: 'Quaternion.*k__BackingField', class: 'Player', manual: 'Search for [CompilerGenerated] + private Quaternion k__BackingField' },
+                'NoReload': { pattern: 'public bool ShootNoReload', class: 'Unknown', manual: 'Search for "public bool ShootNoReload"' },
+                'WeaponRecoil': { pattern: 'private float.*Recoil', class: 'Unknown', manual: 'Search for "private float" with "Recoil"' },
+                'CurrentBehaviour / CurrentObserver': { pattern: 'protected.*Dictionary<.*, int>', class: 'Unknown', manual: '4 protected lines, 4th has Dictionary<..., int>' },
+                'ObserverPlayer': { pattern: 'private Player.*k__BackingField', class: 'Unknown', manual: 'k__BackingField; followed by private Player' },
+                'MatchStatus': { pattern: 'private bool.*protected.*\\..*protected GameObject', class: 'Unknown', manual: 'private bool, protected TYPE.TYPE, protected GameObject' },
+                'LocalPlayer': { pattern: 'protected GameObject.*protected Player', class: 'Unknown', manual: 'protected GameObject followed by protected Player' },
+                'CurrentMatch': { pattern: 'protected.*m_Match', class: 'MatchGame', manual: 'In MatchGame class, protected m_Match' },
+                'Camera / MainCamera': { pattern: 'private Camera m_mainCamera', class: 'VehicleMarkController', manual: 'In VehicleMarkController, private Camera m_mainCamera' },
+                'Player_Data': { pattern: 'public static Player.*HudPetSkillCDAnimEvt', class: 'Player', manual: '4 public static Player.* lines' },
+                'Avatar': { pattern: 'internal IUmaAvatar', class: 'AvatarManager', manual: 'In AvatarManager, internal IUmaAvatar' },
+                'AvatarManager': { pattern: 'protected AvatarManager', class: 'Player', manual: 'In Player class, protected AvatarManager' },
+                'ShadowState': { pattern: 'public PlayerNetwork.*m_ShadowState', class: 'PlayerNetwork', manual: 'In PlayerNetwork, public PlayerNetwork.* m_ShadowState' },
+                'Avatar_Data': { pattern: 'public uint avatarId', class: 'UIPresetAgentBubbleController', manual: 'UIPresetAgentBubbleController class with public uint avatarId' },
+                'Avatar_Data_IsTeam': { pattern: 'public bool isTeammate', class: 'UMAData', manual: 'In UMAData, public bool isTeammate' },
+                'Avatar_IsVisible': { pattern: 'private bool IsVisible', class: 'UmaAvatarSimple', manual: 'In UmaAvatarSimple, private bool IsVisible' },
+                'IsFiring': { pattern: 'private bool <.*>k__BackingField.*TBTAction', class: 'Player', manual: 'Last protected TBTAction -> backing field' },
+                'Player_IsDead': { pattern: 'private bool.*AttackableEntity', class: 'AttackableEntity', manual: 'In AttackableEntity, private bool' },
+                'Player_Name': { pattern: 'public uint ServerGameMusicShootingIndex', class: 'Player', manual: 'Find ServerGameMusicShootingIndex, 2 lines below' },
+                'XPose': { pattern: 'public Player\\..*public float', class: 'PlayerNetwork', manual: 'In PlayerNetwork nested class, between Player.* and float' },
+                'AimbotVisible': { pattern: 'protected ITransformNode.*protected Collider', class: 'Player', manual: '6 ITransformNode lines then protected Collider' },
+                'MainCameraTransform': { pattern: 'public Transform MainCameraTransform', class: 'Player', manual: 'In Player class, public Transform MainCameraTransform' },
+                'DictionaryEntities': { pattern: 'Dictionary<uint,\\s*ReplicationEntity>', class: 'MatchGame', manual: 'In MatchGame, Dictionary<uint, ReplicationEntity>' },
+                'sAim1 / IS_FIRING': { pattern: 'private bool <.*>k__BackingField', class: 'Player', manual: 'Same as IsFiring' },
+                'sAim2 / weaponinfo': { pattern: 'public float m_MaxAngleX', class: 'Player', manual: 'Find m_MaxAngleX, 5 lines below' },
+                'sAim3 / guntipposition': { pattern: 'public Vector3.*ObjectPoolCallbackBase', class: 'ObjectPoolCallbackBase', manual: 'ObjectPoolCallbackBase 8th field' },
+                'sAim4 / bullet_hit': { pattern: 'public Vector3.*ObjectPoolCallbackBase', class: 'ObjectPoolCallbackBase', manual: 'ObjectPoolCallbackBase 7th field' },
+                'FixedDeltaTime': { pattern: 'private float m_FixedDeltaTime', class: 'TimeService', manual: 'In TimeService, private float m_FixedDeltaTime' },
+                'pomba': { pattern: 'private bool <.*>k__BackingField', class: 'Player', manual: 'Same as IsFiring' },
+                'InSnowSlideWayDashing': { pattern: 'public bool InSnowSlideWayDashing', class: 'Player', manual: 'In Player, public bool InSnowSlideWayDashing' },
+                'GameTimer': { pattern: 'private float m_DeltaTime', class: 'TimeService', manual: 'In TimeService (GCommon), private float m_DeltaTime' },
+                'ViewMatrix': { pattern: 'internal Matrix4x4 panelToWorld', class: 'BaseRuntimePanel', manual: 'In BaseRuntimePanel, internal Matrix4x4 panelToWorld' },
+                'Player_ShadowBase': { pattern: 'public PlayerNetwork.*m_ShadowState', class: 'PlayerNetwork', manual: 'In PlayerNetwork, public PlayerNetwork.* m_ShadowState' },
+                'UnlimitedAmmo': {
+                    pattern: 'public int TalentWeaponAmmoClip.*CompilerGenerated.*CompilerGenerated.*CompilerGenerated',
+                    class: 'PlayerAttributes',
+                    manual: 'In PlayerAttributes class, find "public int TalentWeaponAmmoClip;", then count 3 "[CompilerGenerated]" lines and get the next line (private bool backing field at 0xE0).'
+                }
+            };
+
+            // ============ Process File ============
+            async function processFile(file) {
+                const reader = new FileReader();
+                return new Promise((resolve, reject) => {
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsText(file);
+                });
+            }
+
+            // ============ Format Output ============
+            function formatOutput(results) {
+                const bonesResults = results.filter(r => r.category === 'Bones');
+                const otherResults = results.filter(r => r.category !== 'Bones');
+                
+                let output = '';
+                output += '='.repeat(60) + '\n';
+                output += 'OFFSETS SUMMARY:\n';
+                output += '='.repeat(60) + '\n\n';
+                
+                // General offsets
+                output += `🔹 GENERAL OFFSETS : {${otherResults.length}}\n`;
+                output += '-'.repeat(40) + '\n';
+                for (const result of otherResults) {
+                    let lineContent = (result.line || 'N/A').trim().replace(/\n/g, ' ');
+                    if (result.label.includes('/')) {
+                        const labels = result.label.split('/').map(l => l.trim());
+                        for (const label of labels) {
+                            const labelClean = label.replace(/ /g, '_');
+                            output += `internal static uint ${labelClean} = ${result.offset}; // ${lineContent}\n`;
+                        }
+                    } else {
+                        const labelClean = result.label.replace(/ /g, '_');
+                        output += `internal static uint ${labelClean} = ${result.offset}; // ${lineContent}\n`;
+                    }
+                }
+                
+                output += '\n';
+                // Bones offsets
+                output += `🔹 BONES OFFSETS : {${bonesResults.length}}\n`;
+                output += '-'.repeat(40) + '\n';
+                for (const result of bonesResults) {
+                    const lineContent = (result.line || 'N/A').trim().replace(/\n/g, ' ');
+                    output += `  ${result.label} = ${result.offset}, // ${lineContent}\n`;
+                }
+                
+                output += '\n';
+                output += '='.repeat(60) + '\n';
+                output += `📊 TOTAL OFFSETS FOUND: ${results.length}\n`;
+                output += '='.repeat(60) + '\n';
+                
+                return output;
+            }
+
+            // ============ Extract Action ============
+            extractBtn.addEventListener('click', async () => {
+                if (!currentFile) {
+                    showStatus('Please select a dump.cs file first.', 'error');
+                    return;
+                }
+
+                showStatus('⏳ Processing file...', 'loading');
+                extractBtn.classList.remove('active');
+
+                try {
+                    const content = await processFile(currentFile);
+                    const results = extractOffsets(content);
+
+                    // Find missing offsets
+                    const foundLabels = new Set(results.map(r => r.label));
+                    const missing = {};
+                    for (const [label, info] of Object.entries(expectedOffsets)) {
+                        if (!foundLabels.has(label)) {
+                            missing[label] = info;
+                        }
+                    }
+
+                    currentResults = results;
+                    currentMissing = missing;
+
+                    // Update stats
+                    const bones = results.filter(r => r.category === 'Bones');
+                    const general = results.filter(r => r.category !== 'Bones');
+                    totalCount.textContent = results.length;
+                    generalCount.textContent = general.length;
+                    bonesCount.textContent = bones.length;
+                    missingCount.textContent = Object.keys(missing).length;
+                    statsContainer.style.display = 'flex';
+
+                    // Show results preview
+                    const output = formatOutput(results);
+                    resultsContent.textContent = output;
+                    resultsPreview.classList.add('show');
+
+                    // Show download button
+                    downloadBtn.classList.add('show');
+
+                    // Show missing list
+                    if (Object.keys(missing).length > 0) {
+                        let missingHtml = `<details open><summary>⚠️ ${Object.keys(missing).length} Missing Offsets</summary><ul>`;
+                        for (const [label, info] of Object.entries(missing)) {
+                            missingHtml += `<li><strong>${label}</strong> - ${info.manual}</li>`;
+                        }
+                        missingHtml += '</ul></details>';
+                        missingList.innerHTML = missingHtml;
+                        missingList.style.display = 'block';
+                    } else {
+                        missingList.style.display = 'none';
+                    }
+
+                    showStatus(`✅ Successfully extracted ${results.length} offsets!`, 'success');
+
+                } catch (err) {
+                    showStatus(`❌ Error: ${err.message}`, 'error');
+                    console.error(err);
+                } finally {
+                    extractBtn.classList.add('active');
+                }
+            });
+
+            // ============ Download ============
+            downloadBtn.addEventListener('click', () => {
+                if (!currentResults) return;
+                
+                const output = formatOutput(currentResults);
+                const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ExtractedAlloffsets.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            // ============ Helper Functions ============
+            function showStatus(msg, type = 'info') {
+                status.textContent = msg;
+                status.className = 'status show ' + type;
+            }
+
+        })();
+    </script>
+</body>
+</html>
