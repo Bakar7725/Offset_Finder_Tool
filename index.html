@@ -1333,7 +1333,9 @@
                         }
                     }
                 }
-                // ==========================================
+                
+
+                                // ==========================================
                 // 🆕 UNLIMITED AMMO - PlayerAttributes Class
                 // ==========================================
                 let foundUnlimitedAmmo = false;
@@ -1392,6 +1394,57 @@
                     }
                 }
 
+                // ==========================================
+                // 🆕 FIRE INTERVAL - PlayerAttributes Class
+                // Find 'public float GrenadeThrowSpeedScale;' then get the 3rd line after it
+                // ==========================================
+                let foundGrenadeThrowSpeedScale = false;
+                let grenadeThrowLineIndex = -1;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    // Check if we are in PlayerAttributes class
+                    if (line.includes('internal class PlayerAttributes') && 
+                        (i > 0 && lines[i-1].includes('// Namespace: COW.GamePlay'))) {
+                        foundGrenadeThrowSpeedScale = false;
+                        grenadeThrowLineIndex = -1;
+                        continue;
+                    }
+                    
+                    // Find the line with 'public float GrenadeThrowSpeedScale;'
+                    if (line.includes('public float GrenadeThrowSpeedScale;')) {
+                        foundGrenadeThrowSpeedScale = true;
+                        grenadeThrowLineIndex = i;
+                        continue;
+                    }
+                    
+                    // After finding GrenadeThrowSpeedScale, get the 3rd line after it
+                    if (foundGrenadeThrowSpeedScale && grenadeThrowLineIndex !== -1) {
+                        // Check if current line is exactly 3 lines after the GrenadeThrowSpeedScale line
+                        if (i === grenadeThrowLineIndex + 3) {
+                            const targetLine = lines[i].trim();
+                            const offsetMatch = targetLine.match(/0x[0-9A-Fa-f]+/);
+                            if (offsetMatch) {
+                                const fieldMatch = targetLine.match(/private\s+(\w+)\s+(\w+);/);
+                                if (fieldMatch) {
+                                    results.push({
+                                        label: 'FireInterval',
+                                        offset: offsetMatch[0],
+                                        class: 'PlayerAttributes',
+                                        typedef: 'N/A',
+                                        line: targetLine,
+                                        type: fieldMatch[1],
+                                        field: fieldMatch[2]
+                                    });
+                                }
+                                foundGrenadeThrowSpeedScale = false; // Stop after finding
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 return results;
             }
 
@@ -1439,6 +1492,11 @@
                     pattern: 'public int TalentWeaponAmmoClip.*CompilerGenerated.*CompilerGenerated.*CompilerGenerated',
                     class: 'PlayerAttributes',
                     manual: 'In PlayerAttributes class, find "public int TalentWeaponAmmoClip;", then count 3 "[CompilerGenerated]" lines and get the next line (private bool backing field at 0xE0).'
+                },
+                'FireInterval': {
+                    pattern: 'public float GrenadeThrowSpeedScale;',
+                    class: 'PlayerAttributes',
+                    manual: 'In PlayerAttributes class, find "public float GrenadeThrowSpeedScale;" then take the 3rd line after it (private float MMLNIJOPFLA; // 0x188)'
                 }
             };
 
