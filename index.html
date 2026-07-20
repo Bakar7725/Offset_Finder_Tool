@@ -574,30 +574,22 @@
                 while ((rm = recoilPattern.exec(content)) !== null) {
                     recoilMatches.push(rm);
                 }
-                // Find the match that contains 'recoil' in the field name or comment
-                let recoilMatch = null;
-                for (const match of recoilMatches) {
-                    if (match[4].toLowerCase().includes('recoil') || match[5].toLowerCase().includes('recoil')) {
-                        recoilMatch = match;
-                        break;
+                if (recoilMatches.length >= 3) {
+                    const r = recoilMatches[2];
+                    // Extract the offset from the comment (group 5)
+                    const offsetMatch = r[5].match(/0x[0-9A-Fa-f]+/);
+                    if (offsetMatch) {
+                        results.push({
+                            label: 'WeaponRecoil',
+                            offset: offsetMatch[0],  // This gets 0xC instead of EFMCDHABKGP
+                            class: r[1],
+                            typedef: r[3],
+                            line: `private float ${r[4]}; // ${r[5].trim()}`,
+                            type: 'float',
+                            field: r[4]
+                        });
                     }
                 }
-                // If no 'recoil' found, use the last match
-                if (!recoilMatch && recoilMatches.length > 0) {
-                    recoilMatch = recoilMatches[recoilMatches.length - 1];
-                }
-                if (recoilMatch) {
-                    results.push({
-                        label: 'WeaponRecoil',
-                        offset: recoilMatch[4].trim(),
-                        class: recoilMatch[1],
-                        typedef: recoilMatch[3],
-                        line: `private float ${recoilMatch[4]}; // ${recoilMatch[5].trim()}`,
-                        type: 'float',
-                        field: recoilMatch[4]
-                    });
-                }
-
                 // --- CurrentBehaviour / CurrentObserver ---
                 for (let i = 0; i < lines.length - 3; i++) {
                     const line1 = lines[i].trim();
