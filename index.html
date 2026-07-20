@@ -567,7 +567,6 @@
                 }
 
                 // --- WeaponRecoil ---
-                // --- WeaponRecoil ---
                 const recoilPattern = /\/\/\s*Namespace:\s*COW\.GamePlay\s*\n\s*internal\s+class\s+(\w+)\s*:\s*(\w+)\s*\/\/\s*TypeDefIndex:\s*(\d+)\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n\s*private\s+float\s+(\w+);\s*\/\/\s*([^\n]+)\s*\n\s*\/\/\s*Methods/g;
                 const recoilMatches = [];
                 let rm;
@@ -576,20 +575,17 @@
                 }
                 if (recoilMatches.length >= 3) {
                     const r = recoilMatches[2];
-                    // Extract the offset from the comment (group 5)
-                    const offsetMatch = r[5].match(/0x[0-9A-Fa-f]+/);
-                    if (offsetMatch) {
-                        results.push({
-                            label: 'WeaponRecoil',
-                            offset: offsetMatch[0],  // This gets 0xC instead of EFMCDHABKGP
-                            class: r[1],
-                            typedef: r[3],
-                            line: `private float ${r[4]}; // ${r[5].trim()}`,
-                            type: 'float',
-                            field: r[4]
-                        });
-                    }
+                    results.push({
+                        label: 'WeaponRecoil',
+                        offset: r[5].trim(),
+                        class: r[1],
+                        typedef: r[3],
+                        line: `private float ${r[4]}; // ${r[5].trim()}`,
+                        type: 'float',
+                        field: r[4]
+                    });
                 }
+
                 // --- CurrentBehaviour / CurrentObserver ---
                 for (let i = 0; i < lines.length - 3; i++) {
                     const line1 = lines[i].trim();
@@ -1649,4 +1645,4 @@
         })();
     </script>
 </body>
-</html>
+</html> 
