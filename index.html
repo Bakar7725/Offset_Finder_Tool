@@ -1266,6 +1266,8 @@
                     });
                 }
 
+                
+
                 // --- BONES: Head, LeftWrist, Root, Spine, Hip, RightCalf, LeftCalf, RightFoot, LeftFoot, RightWrist, LeftHand, LeftShoulder, RightShoulder, RightWristJoint, LeftWristJoint, LeftElbow, RightElbow ---
                 const boneLabels = [
                     { label: 'Head', offset: 2 },
@@ -1333,8 +1335,71 @@
                         }
                     }
                 }
-                
 
+                // ==========================================
+                // 🆕 WEAPON SKIN MAP - PlayerNetwork Class
+                // Find first SortedList<uint, uint> in PlayerNetwork
+                // ==========================================
+                let inPlayerNetwork = false;
+                let classDepth = 0;
+                let sortedListFound = false;
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    
+                    // Check if we're entering PlayerNetwork class
+                    if (line.includes('internal class PlayerNetwork : Player,') ||
+                        line.includes('internal class PlayerNetwork :')) {
+                        inPlayerNetwork = true;
+                        classDepth = 1; // Start counting braces after the class declaration
+                        // Find the opening brace
+                        for (let j = i + 1; j < lines.length; j++) {
+                            if (lines[j].includes('{')) {
+                                classDepth = 1;
+                                break;
+                            }
+                        }
+                        continue;
+                    }
+                    
+                    if (inPlayerNetwork) {
+                        // Count braces to track class scope
+                        const openBraces = (line.match(/{/g) || []).length;
+                        const closeBraces = (line.match(/}/g) || []).length;
+                        classDepth += openBraces - closeBraces;
+                        
+                        // Check if we've left the class (back to depth 0)
+                        if (classDepth <= 0) {
+                            inPlayerNetwork = false;
+                            continue;
+                        }
+                        
+                        // Look for SortedList<uint, uint> declaration
+                        if (!sortedListFound &&
+                            (line.includes('private SortedList<uint, uint>') ||
+                             line.includes('private SortedList< uint, uint >') ||
+                             line.includes('SortedList<uint, uint>'))) {
+                            
+                            const offsetMatch = line.match(/0x[0-9A-Fa-f]+/);
+                            if (offsetMatch) {
+                                const fieldMatch = line.match(/private\s+SortedList<\s*uint\s*,\s*uint\s*>\s+(\w+);/);
+                                const fieldName = fieldMatch ? fieldMatch[1] : 'WeaponSkinMap';
+                                
+                                results.push({
+                                    label: 'WeaponSkinMap',
+                                    offset: offsetMatch[0],
+                                    class: 'PlayerNetwork',
+                                    typedef: 'N/A',
+                                    line: line.trim(),
+                                    type: 'SortedList<uint, uint>',
+                                    field: fieldName
+                                });
+                                sortedListFound = true;
+                                break;
+                            }
+                        }
+                    }
+                }
                                 // ==========================================
                 // 🆕 UNLIMITED AMMO - PlayerAttributes Class
                 // ==========================================
@@ -1497,6 +1562,11 @@
                     pattern: 'public float GrenadeThrowSpeedScale;',
                     class: 'PlayerAttributes',
                     manual: 'In PlayerAttributes class, find "public float GrenadeThrowSpeedScale;" then take the 3rd line after it (private float MMLNIJOPFLA; // 0x188)'
+                },
+                'WeaponSkinMap': {
+                    pattern: 'SortedList<uint, uint>',
+                    class: 'PlayerNetwork',
+                    manual: 'In PlayerNetwork class, find the first SortedList<uint, uint> field. This is used for WeaponSkinMap offset.'
                 }
             };
 
