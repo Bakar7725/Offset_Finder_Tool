@@ -229,6 +229,14 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(46, 213, 115, 0.3);
         }
+
+        .btn-download.antihack {
+            background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+        }
+        .btn-download.antihack:hover {
+            box-shadow: 0 8px 30px rgba(231, 76, 60, 0.3) !important;
+        }
+        
         .missing-list {
             margin-top: 12px;
             padding: 12px;
@@ -325,6 +333,8 @@
 
         <!-- Download Button -->
         <button class="btn-download" id="downloadBtn">📥 Download ExtractedAlloffsets.txt</button>
+
+        <button class="btn-download antihack" id="downloadAntiHackBtn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🛡️ Download Anti-Cheat Guide.txt</button>
 
         <!-- Results Preview -->
         <div class="results-preview" id="resultsPreview">
@@ -424,6 +434,544 @@
                 'short', 'ushort', 'double', 'decimal', 'string', 'object', 'void'
             ]);
 
+
+            // ============ Anti-Cheat Guide Content ============
+function getAntiHackGuide() {
+    return `================================================================================
+                    🛡️ ANTI-CHEAT OFFSET FINDING GUIDE 🛡️
+================================================================================
+
+📌 FINDING METHODE OF ANTICHEATS IN DUMP.cs AND IDA PRO:
+
+================================================================================
+STEP 1: FIND ANTI-CHEAT CLASSES IN DUMP.CS
+================================================================================
+
+In dump.cs search for: '// Namespace: ffantihack'
+
+You will find 2 classes:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  // Namespace: ffantihack                                                  │
+│  public class MFHPGMELLCC // TypeDefIndex: 1568                           │
+│                                                                           │
+│  // Namespace: ffantihack                                                  │
+│  public static class PCNABJAFBDO // TypeDefIndex: 1570                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+STEP 2: FIND OFFSETS FROM IDA PRO
+================================================================================
+
+A) MFHPGMELLCC CLASS:
+
+Open MFHPGMELLCC in dump.cs and copy second method offset:
+
+    // Methods
+    // RVA: 0x254F764 Offset: 0x254F764 VA: 0xB6CCF764
+    public static bool EBCGNOGCKNA(string AKKPPLHOCPL, Dictionary<string, string> PMMDAKFBFBP) { }
+
+    // RVA: 0x254F8E0 Offset: 0x254F8E0 VA: 0xB6CCF8E0  ← 2nd Method
+    public static void JDEDBONDHKF(string BCNPICAHGFE, bool OIGDJKJDKMA) { }
+
+Copy 0x254F8E0 and jump to this address in IDA Pro.
+Click on the address and press F5 to see pseudo-code.
+
+PSEUDO-CODE FOR 2ND METHOD (sub_254F8E0):
+─────────────────────────────────────────
+int __fastcall sub_254F8E0(int a1, int a2)
+{
+  int v4; // r6
+  int result; // r0
+  int *v6; // r5
+  int v7; // r0
+  int v8; // r0
+  int v9; // r0
+  int v10; // r1
+
+  if ( !byte_ADDCBA1 )
+  {
+    sub_24BAE30(off_A9A02B8); → off_A9A02B8
+    sub_24BAE30(off_A9A02BC);
+    byte_ADDCBA1 = 1;
+  }
+  if ( sub_24C0F90(1, 0) )
+  {
+    v4 = sub_24C0FA0(1, 0);
+    if ( !v4 )
+      sub_24BAE90(0);
+    return sub_24C1B6C(v4, a1, a2, 0);
+  }
+  else
+  {
+    v6 = (int *)off_A9A02B8; → off_A9A02B8
+    v7 = *(_DWORD *)off_A9A02B8;
+    if ( !*(_DWORD *)(*(_DWORD *)off_A9A02B8 + 116) )
+    {
+      sub_24BAE40();
+      v7 = *v6;
+    }
+    result = **(unsigned __int8 **)(v7 + 92);
+    if ( !result )
+    {
+      sub_254DA40(29001);
+      sub_254EBA4(18, *(_DWORD *)off_A9A02BC);
+      v8 = *v6;
+      if ( !*(_DWORD *)(*v6 + 116) )
+      {
+        sub_24BAE40();
+        v8 = *v6;
+      }
+      v9 = *(_DWORD *)(v8 + 92);
+      *(_DWORD *)(v9 + 8) = 0;
+      *(_BYTE *)(v9 + 50) = 0;
+      *(_BYTE *)v9 = 1;
+      result = sub_24BE930(0);
+      v10 = *(_DWORD *)(*v6 + 92);
+      *(_DWORD *)(v10 + 60) = result;
+      *(_BYTE *)(v10 + 52) = 0;
+      *(_BYTE *)(v10 + 51) = a2;
+    }
+  }
+  return result;
+}
+
+PSEUDO-CODE FOR 3RD METHOD (sub_254FA18):
+─────────────────────────────────────────
+int __fastcall sub_254FA18(int a1, int a2)
+{
+  int v4; // r6
+  int result; // r0
+  int *v6; // r9
+  int v7; // r0
+  int v8; // r0
+  int v9; // r1
+  int v10; // r4
+  unsigned int v11; // r7
+  _DWORD *v12; // r10
+  _DWORD *v13; // r11
+  int v14; // r0
+  int v15; // r6
+  int v16; // r1
+  int v17; // r0
+  int v18; // r0
+  int v19; // r0
+  int v20; // r0
+
+  if ( !byte_ADDCBA2 )
+  {
+    sub_24BAE30(off_A9A02B8); → off_A9A02B8
+    sub_24BAE30(off_A9A02C0);
+    sub_24BAE30(off_A9A02C4);
+    sub_24BAE30(off_A98645C);
+    sub_24BAE30(off_A9A02C8);
+    sub_24BAE30(off_A9A02CC);
+    byte_ADDCBA2 = 1;
+  }
+  if ( sub_24C0F90(2, 0) )
+  {
+    v4 = sub_24C0FA0(2, 0);
+    if ( !v4 )
+      sub_24BAE90(0);
+    return sub_24C11CC(v4, a1, a2, 0);
+  }
+  else
+  {
+    v6 = (int *)off_A9A02B8; → off_A9A02B8
+    v7 = *(_DWORD *)off_A9A02B8;
+    if ( !*(_DWORD *)(*(_DWORD *)off_A9A02B8 + 116) ) 
+    {
+      sub_24BAE40();
+      v7 = *v6;
+    }
+    v8 = *(_DWORD *)(v7 + 92);
+    *(_DWORD *)(v8 + 44) = a1;
+    sub_24BAE80(v8 + 44, a1);
+    result = sub_24BB150(a1, 0);
+    if ( !result )
+    {
+      if ( a2 )
+      {
+        v9 = *(_DWORD *)(a2 + 12);
+        if ( v9 >= 1 )
+        {
+          v10 = a2 + 16;
+          v11 = 0;
+          v12 = off_A98645C;
+          v13 = off_A9A02C4;
+          do
+          {
+            v14 = *v6;
+            if ( !*(_DWORD *)(*v6 + 116) )
+            {
+              sub_24BAE40();
+              v9 = *(_DWORD *)(a2 + 12);
+              v14 = *v6;
+            }
+            v15 = *(_DWORD *)(*(_DWORD *)(v14 + 92) + 44);
+            if ( v9 <= v11 )
+              sub_24BAF00();
+            v16 = sub_24BBDA0(v15, *v12, *(_DWORD *)(v10 + 4 * v11), 0);
+            v17 = *(_DWORD *)(*v6 + 92);
+            *(_DWORD *)(v17 + 44) = v16;
+            sub_24BAE80(v17 + 44, v16);
+            if ( *(_DWORD *)(a2 + 12) <= v11 )
+              sub_24BAF00();
+            v18 = sub_24BF190(*v13, *(_DWORD *)(v10 + 4 * v11), 0);
+            sub_254EBA4(18, v18);
+            v9 = *(_DWORD *)(a2 + 12);
+            ++v11;
+          }
+          while ( (int)v11 < v9 );
+        }
+      }
+      v19 = sub_24BF190(*(_DWORD *)off_A9A02C8, a1, 0);
+      sub_254EBA4(18, v19);
+      v20 = sub_24BF190(*(_DWORD *)off_A9A02CC, *(_DWORD *)off_A9A02C0, 0);
+      return sub_254EBA4(18, v20);
+    }
+  }
+  return result;
+}
+
+================================================================================
+🎯 GOLDEN METHODE - MFHPGMELLCC
+================================================================================
+
+    // Methods 
+    // RVA: 0x254F764 Offset: 0x254F764 VA: 0xB6CCF764
+    public static bool EBCGNOGCKNA(string AKKPPLHOCPL, Dictionary<string, string> PMMDAKFBFBP) { }
+
+    // RVA: 0x254F8E0 Offset: 0x254F8E0 VA: 0xB6CCF8E0
+    public static void JDEDBONDHKF(string BCNPICAHGFE, bool OIGDJKJDKMA) { }
+
+    // RVA: 0x254FA18 Offset: 0x254FA18 VA: 0xB6CCFA18
+    public static void PJNFLLOBCAB(string MFLHABMMAJB, string[] KFEFHJABOLJ) { }
+
+    // RVA: 0x254FC70 Offset: 0x254FC70 VA: 0xB6CCFC70
+    public static void APMHBOHMHOB() { }
+
+    // RVA: 0x254FDD8 Offset: 0x254FDD8 VA: 0xB6CCFDD8  ← GOLDEN METHODE
+    public static void AJEDNJODKIG() { }
+
+✨ WHY GOLDEN? Only one off_ in the pseudo-code!
+
+GOLDEN PSEUDO-CODE (sub_254FDD8):
+─────────────────────────────────
+int sub_254FDD8()
+{
+  int v0; // r4
+  int result; // r0
+  int *v2; // r4
+  int v3; // r0
+
+  if ( !byte_ADDCBA4 )
+  {
+    sub_24BAE30(off_A9A02B8); → off_A9A02B8
+    byte_ADDCBA4 = 1;
+  }
+  if ( sub_24C0F90(4, 0) )
+  {
+    v0 = sub_24C0FA0(4, 0);
+    if ( !v0 )
+      sub_24BAE90(0);
+    return sub_24CA0FC(v0, 0);
+  }
+  else
+  {
+    v2 = (int *)off_A9A02B8;
+    v3 = *(_DWORD *)off_A9A02B8;
+    if ( !*(_DWORD *)(*(_DWORD *)off_A9A02B8 + 116) ) → off_A9A02B8
+    {
+      sub_24BAE40();
+      v3 = *v2;
+    }
+    result = *(_DWORD *)(v3 + 92);
+    *(_BYTE *)(result + 48) = 1;
+  }
+  return result;
+}
+
+================================================================================
+B) PCNABJAFBDO CLASS
+================================================================================
+
+    // Methods
+    // RVA: 0x2552A20 Offset: 0x2552A20 VA: 0xB6CD2A20
+    public static void FHFMPABKGGG(string JJPLCFEKCJB) { }
+
+    // RVA: 0x2552D3C Offset: 0x2552D3C VA: 0xB6CD2D3C
+    public static void DMKGBCIJBPP(ReportGGPInfo NBLHNPAHGNA) { }
+
+    // RVA: 0x2552E94 Offset: 0x2552E94 VA: 0xB6CD2E94
+    public static int LMNGOJOJFNM(bool FAFMHOLMFBB, int NGNFLJHDAPG, long KJNOJPELECC = 0) { }
+
+    // RVA: 0x25537B0 Offset: 0x25537B0 VA: 0xB6CD37B0
+    public static int JGPAKNIFGML(string MFLHABMMAJB, long GMEOHKFLJJF, long NDJOAPCDAHF, bool GIKBINPHLAF, long KJNOJPELECC = 0) { }
+
+    // RVA: 0x2553B7C Offset: 0x2553B7C VA: 0xB6CD3B7C
+    public static int OAGGEANDDAD(string MLBAONCMBEJ) { }
+
+    // RVA: 0x2553DD4 Offset: 0x2553DD4 VA: 0xB6CD3DD4
+    public static int OIHNEDHGJJK(string JNOFECOLJBM) { }
+
+    // RVA: 0x2553ED4 Offset: 0x2553ED4 VA: 0xB6CD3ED4
+    public static int PHJFHLFNPIP(string OBCGMDDEGOG, string HFGPDFIAEKG, string OPGLGLHKGEB) { }
+
+    // RVA: 0x2553FE4 Offset: 0x2553FE4 VA: 0xB6CD3FE4
+    public static int FNCFOOAANHF(string OBCGMDDEGOG, string HFGPDFIAEKG, string OPGLGLHKGEB, string BLKOEHKJAFF, string AEHHHOBHOAJ, string AECLMHIKBGC) { }
+
+    // RVA: 0x2553458 Offset: 0x2553458 VA: 0xB6CD3458
+    public static int DLBACIOAMGL(string ELOPIKDJLDF) { }
+
+    // RVA: 0x255352C Offset: 0x255352C VA: 0xB6CD352C
+    public static int LBEDIDELFID(string GINIMEGGJIF) { }
+
+    // RVA: 0x25541A4 Offset: 0x25541A4 VA: 0xB6CD41A4  ← GOLDEN METHODE
+    public static int OMNPLCKDCOA(string NOKJAAEFCLM) { }
+
+    // RVA: 0x25542A4 Offset: 0x25542A4 VA: 0xB6CD42A4
+    public static byte[] CEJMCCMFJJB() { }
+
+GOLDEN PSEUDO-CODE (sub_25541A4):
+─────────────────────────────────
+int __fastcall sub_25541A4(int a1)
+{
+  int v2; // r5
+  int *v4; // r5
+  int v5; // r0
+
+  if ( !byte_ADDCBC3 )
+  {
+    sub_24BAE30(off_A9A0338); → off_A9A0338
+    byte_ADDCBC3 = 1;
+  }
+  if ( sub_24C0F90(70, 0) )
+  {
+    v2 = sub_24C0FA0(70, 0);
+    if ( !v2 )
+      sub_24BAE90(0);
+    return sub_24C1F64(v2, a1, 0);
+  }
+  else
+  {
+    v4 = (int *)off_A9A0338;
+    v5 = *(_DWORD *)off_A9A0338;
+    if ( !*(_DWORD *)(*(_DWORD *)off_A9A0338 + 116) ) → off_A9A0338
+    {
+      sub_24BAE40();
+      v5 = *v4;
+    }
+    if ( **(_BYTE **)(v5 + 92) )
+    {
+      if ( !*(_DWORD *)(v5 + 116) )
+        sub_24BAE40();
+      return sub_2553C80(120, 0, a1, 0, 0, 0, 0, 0);
+    }
+    else
+    {
+      return -1;
+    }
+  }
+}
+
+PSEUDO-CODE (sub_255352C):
+─────────────────────────
+int __fastcall sub_255352C(int a1)
+{
+  int v2; // r5
+
+  if ( !byte_ADDCBC2 )
+  {
+    sub_24BAE30(off_A9A0338); → off_A9A0338
+    byte_ADDCBC2 = 1;
+  }
+  if ( sub_24C0F90(62, 0) )
+  {
+    v2 = sub_24C0FA0(62, 0);
+    if ( !v2 )
+      sub_24BAE90(0);
+    return sub_24C1F64(v2, a1, 0);
+  }
+  else
+  {
+    if ( !*(_DWORD *)(*(_DWORD *)off_A9A0338 + 116) ) → off_A9A0338
+      sub_24BAE40();
+    return sub_2553C80(109, 0, a1, 0, 0, 0, 0, 0);
+  }
+}
+
+================================================================================
+📋 FIELDS FROM DUMP.CS
+================================================================================
+
+MFHPGMELLCC FIELDS:
+───────────────────
+public class MFHPGMELLCC // TypeDefIndex: 1568
+{
+    // Fields
+    public static bool OFILJKNCLPL;                          // 0x0
+    public static MFHPGMELLCC.AJIAOOPCKBC EIEICOFJAGK;      // 0x4
+    public static uint DNNFOOGPFHO;                          // 0x8
+    public static MFHPGMELLCC.KMMCHHFAPAO IHFAKODFHLN;       // 0xC
+    private static Dictionary<string, string> GFABLDLLFLC;  // 0x10
+    private static Dictionary<string, string> MFAHGKBMEJA;  // 0x14
+    private static int CKIPBOCGEAD;                          // 0x18
+    private static float HACPJJINDHE;                        // 0x1C
+    private static string NBGNNKGCEOH;                       // 0x20
+    public static Dictionary<string, bool> BEIAIGMGKAI;      // 0x24
+    public static Dictionary<string, Dictionary<string, string>> LEPELCKMEOJ; // 0x28
+    public static string JOKOCAOBHIH;                         // 0x2C
+    private static bool PHEEFAHAHFE;                          // 0x30
+    private static bool IBJJDBEJMLD;                          // 0x31
+    private static bool CAANLIGMMKP;                          // 0x32
+    private static bool KIBPPIFNAKC;                          // 0x33
+    private static bool GPANAPICKMA;                          // 0x34
+    private static uint EHEJDNLIKPJ;                          // 0x38
+    public static float IKNJCAGCGDL;                          // 0x3C
+    public static bool ANFAMBFAHHB;                           // 0x40
+    private static bool HDJALNKOBJM;                          // 0x41
+}
+
+PCNABJAFBDO FIELDS:
+───────────────────
+public static class PCNABJAFBDO // TypeDefIndex: 1570
+{
+    // Fields
+    private static bool FJPIDPLAOLB;          // 0x0
+    private static bool EFCGJFLJAEL;          // 0x1
+    private static int PEEKMAIOKOM;           // 0x4
+    private static bool ENONCFFMNLC;          // 0x8
+    private const string MKGIFBAHBJO = "13.2";
+    private const string AJJLCCPNMDC = "4.5";
+    private static string JLGIMNGKGLG;        // 0xC
+    private static long KELKEEMEPBN;          // 0x10
+    private static long FBCIKEOBPLO;          // 0x18
+    private static string IPACBPHKMJM;        // 0x20
+    private static string FFLECAGEMBI;        // 0x24
+    private static long PDFHIFNOMAB;          // 0x28
+    private static long[] CLIHDHKHLKC;        // 0x30
+    private static float HACPJJINDHE;         // 0x34
+    private static string NBGNNKGCEOH;        // 0x38
+    public static bool IOHDGCLENAN;           // 0x3C
+    public static bool FFMCFIAGADG;           // 0x3D
+    public static bool LIFMGNBIDPM;           // 0x3E
+    public static bool IMCKFEHELJK;           // 0x3F
+    public static bool PKHIBFONEOB;           // 0x40
+    private static List<byte> PMEJNLOMNHB;    // 0x44
+    private static HMJPCGCBNHI MKJMCGALJDK;   // 0x48
+    public static int MNAHMKDJCEE;            // 0x4C
+    public const int AEBFCLGMPDJ = -100;
+}
+
+================================================================================
+📌 ANTI-HACK TYPEINFO OFFSETS
+================================================================================
+
+AntiHackTypeInfo.MFHPGMELLCC  = 0xA9A02B8
+AntiHackTypeInfo.PCNABJAFBDO  = 0xA9A0338
+
+================================================================================
+🎯 SUMMARY - KEY OFFSETS TO FIND IN IDA
+================================================================================
+
+MFHPGMELLCC:
+  - off_A9A02B8 (Main TypeInfo offset)
+ 
+
+PCNABJAFBDO:
+  - off_A9A0338 (Main TypeInfo offset)
+
+================================================================================
+✅ COMPLETED OFFSETS.CS (Anti-Hack Section)
+================================================================================
+
+// AntiHack TypeInfo
+internal static class AntiHackTypeInfo
+{
+    internal static uint MFHPGMELLCC = 0xA9A02B8;
+    internal static uint PCNABJAFBDO = 0xA9A0338;
+}
+
+// AntiHack Part 1 (MFHPGMELLCC)
+internal static class AntiHack1
+{
+    internal static uint OFILJKNCLPL = 0x00;
+    internal static uint EIEICOFJAGK = 0x04;
+    internal static uint DNNFOOGPFHO = 0x08;
+    internal static uint IHFAKODFHLN = 0x0C;
+    internal static uint GFABLDLLFLC = 0x10;
+    internal static uint MFAHGKBMEJA = 0x14;
+    internal static uint CKIPBOCGEAD = 0x18;
+    internal static uint HACPJJINDHE = 0x1C;
+    internal static uint NBGNNKGCEOH = 0x20;
+    internal static uint BEIAIGMGKAI = 0x24;
+    internal static uint LEPELCKMEOJ = 0x28;
+    internal static uint JOKOCAOBHIH = 0x2C;
+    internal static uint PHEEFAHAHFE = 0x30;
+    internal static uint IBJJDBEJMLD = 0x31;
+    internal static uint CAANLIGMMKP = 0x32;
+    internal static uint KIBPPIFNAKC = 0x33;
+    internal static uint GPANAPICKMA = 0x34;
+    internal static uint EHEJDNLIKPJ = 0x38;
+    internal static uint IKNJCAGCGDL = 0x3C;
+    internal static uint ANFAMBFAHHB = 0x40;
+    internal static uint HDJALNKOBJM = 0x41;
+}
+
+// AntiHack Part 2 (PCNABJAFBDO)
+internal static class AntiHack2
+{
+    internal static uint FJPIDPLAOLB = 0x00;
+    internal static uint EFCGJFLJAEL = 0x01;
+    internal static uint PEEKMAIOKOM = 0x04;
+    internal static uint ENONCFFMNLC = 0x08;
+    internal static uint JLGIMNGKGLG = 0x0C;
+    internal static uint KELKEEMEPBN = 0x10;
+    internal static uint FBCIKEOBPLO = 0x18;
+    internal static uint IPACBPHKMJM = 0x20;
+    internal static uint FFLECAGEMBI = 0x24;
+    internal static uint PDFHIFNOMAB = 0x28;
+    internal static uint CLIHDHKHLKC = 0x30;
+    internal static uint PC_HACPJJINDHE = 0x34;
+    internal static uint PC_NBGNNKGCEOH = 0x38;
+    internal static uint IOHDGCLENAN = 0x3C;
+    internal static uint FFMCFIAGADG = 0x3D;
+    internal static uint LIFMGNBIDPM = 0x3E;
+    internal static uint IMCKFEHELJK = 0x3F;
+    internal static uint PKHIBFONEOB = 0x40;
+    internal static uint PMEJNLOMNHB = 0x44;
+    internal static uint MKJMCGALJDK = 0x48;
+    internal static uint MNAHMKDJCEE = 0x4C;
+}
+
+================================================================================
+🔴 IMPORTANT NOTES:
+================================================================================
+
+1. These offsets are from OB54 V7a - may vary in other versions
+2. Always verify with your specific dump.cs file
+3. The "Golden Methods" have only one off_ reference, making them easy to find
+4. Use IDA Pro's F5 (Hex-Rays decompiler) to view pseudo-code
+5. The TypeInfo offsets (0xA9A02B8 and 0xA9A0338) are used as base addresses
+
+================================================================================
+📌 HOW TO USE THIS GUIDE:
+================================================================================
+
+1. Open your dump.cs file
+2. Search for '// Namespace: ffantihack'
+3. Locate MFHPGMELLCC and PCNABJAFBDO classes
+4. Copy the RVA offsets from the methods
+5. Jump to those addresses in IDA Pro
+6. Press F5 to view pseudo-code
+7. Look for off_ references (these are the TypeInfo offsets)
+8. Add the field offsets to your offsets.cs
+
+================================================================================
+                    END OF ANTI-CHEAT GUIDE
+================================================================================`;
+}
             function extractOffsets(content) {
                 const results = [];
                 const lines = content.split('\n');
@@ -1766,6 +2314,19 @@
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             });
+
+            downloadAntiHackBtn.addEventListener('click', () => {
+            const guide = getAntiHackGuide();
+            const blob = new Blob([guide], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'AntiCheat_Guide.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
 
             // ============ Helper Functions ============
             function showStatus(msg, type = 'info') {
