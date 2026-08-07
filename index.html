@@ -611,6 +611,20 @@ Both functions reference off_A987F88 as the main offset.
                 }
             });
 
+            // ============ Download Cloth Guide ============
+            downloadClothBtn.addEventListener('click', () => {
+                const guide = getClothGuide();
+                const blob = new Blob([guide], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ClothOffset_Guide.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+            
             // Drag and drop
             dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
