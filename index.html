@@ -1492,6 +1492,24 @@
                     }
                 }
 
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('public uint weaponSkinLobbyWeaponID;')) {
+                        const offsetMatch = lines[i].match(/0x[0-9A-Fa-f]+/);
+                        if (offsetMatch) {
+                            results.push({
+                                label: 'WeaponID',
+                                offset: offsetMatch[0],
+                                class: 'Player',
+                                typedef: 'N/A',
+                                line: lines[i].trim(),
+                                type: 'uint',
+                                field: 'weaponSkinLobbyWeaponID'
+                            });
+                        }
+                        break;
+                    }
+                }
+
                 // ==========================================
                 // 🆕 FIRE INTERVAL - PlayerAttributes Class
                 // Find 'public float GrenadeThrowSpeedScale;' then get the 3rd line after it
@@ -1605,7 +1623,12 @@
                     pattern: 'public const float RECOVER_FROM_HIT_FLY_INTERVAL',
                     class: 'Player',
                     manual: 'In Player class, find "public const float RECOVER_FROM_HIT_FLY_INTERVAL", then check next 3 lines for HitFlyInfo, private bool, private float'
-                }
+                },
+                'WeaponID': {
+                    pattern: 'public uint weaponSkinLobbyWeaponID',
+                    class: 'Player',
+                    manual: 'Search for "public uint weaponSkinLobbyWeaponID" in the file'
+                },
             };
 
             // ============ Process File ============
