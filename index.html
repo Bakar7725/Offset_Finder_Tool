@@ -195,6 +195,12 @@
             flex: 1;
             min-width: 100px;
         }
+        .btn-download.cloth {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad) !important;
+        }
+        .btn-download.cloth:hover {
+            box-shadow: 0 8px 30px rgba(155, 89, 182, 0.3) !important;
+        }
         .stat-item .number {
             color: #fff;
             font-size: 24px;
@@ -335,7 +341,8 @@
         <button class="btn-download" id="downloadBtn">📥 Download ExtractedAlloffsets.txt</button>
 
         <button class="btn-download antihack" id="downloadAntiHackBtn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); display: block;">🛡️ Download Anti-Cheat Guide.txt</button>
-
+        <button class="btn-download cloth" id="downloadClothBtn" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); display: block;">👔 Download Cloth Offset Guide.txt</button>
+        
         <!-- Results Preview -->
         <div class="results-preview" id="resultsPreview">
             <pre id="resultsContent"></pre>
@@ -365,6 +372,7 @@
             const resultsContent = document.getElementById('resultsContent');
             const downloadBtn = document.getElementById('downloadBtn');
             const downloadAntiHackBtn = document.getElementById('downloadAntiHackBtn'); // ← ADD THIS LINE
+            const downloadClothBtn = document.getElementById('downloadClothBtn'); // ← ADD THIS LINE
             const missingList = document.getElementById('missingList');
 
             let currentFile = null;
@@ -387,6 +395,199 @@
                 missingList.style.display = 'none';
             }
 
+            // ============ Cloth Offset Guide Content ============
+function getClothGuide() {
+    return `#####################################################################################################
+#####################################################################################################
+#                                                                                                   #
+#                                                                                                   #
+#                                                                                                   #
+#                         Find Clothes Changer Offset From IL2CPP in IDA PRO                        #
+#                                                                                                   #
+#                                                                                                   #
+#                                                                                                   #
+#####################################################################################################
+#####################################################################################################
+
+
+
+
+public class AvatarWardrobeData : CSVBaseData, IComparable<AvatarWardrobeData>, IGetId //
+
+find this Line : 
+
+public bool get_EffectForceShow() { }
+
+
+In my case offset of this function :
+
+// RVA: 0x4BCB680 Offset: 0x4BCB680 VA: 0xB934B680
+public bool get_EffectForceShow() { } 
+
+
+In IDA PRO dumped libil2cpp Go To Address : 0x4BCB680
+
+Then select on address and press F5 to see inside the function : 
+
+--------------------------------------------------------------
+
+int __fastcall sub_4BCB680(int a1)
+{
+  int v2; // r5
+  int v4; // r0
+  int v5; // r4
+  int v6; // r5
+  int v7; // r4
+
+  if ( !byte_ADEA308 )
+  {
+    sub_34D6F04(off_A987F88);
+    byte_ADEA308 = 1;
+  }
+  if ( sub_34D70F4(6988, 0) )
+  {
+    v2 = sub_34D7104(6988, 0);
+    if ( !v2 )
+      sub_34D6F74();
+    return sub_34D71B8(v2, a1, 0);
+  }
+  else
+  {
+    v4 = sub_34D7144(*(_DWORD *)off_A987F88);
+    v5 = *(unsigned __int16 *)(a1 + 26);
+    v6 = v4;
+    if ( !v4 )
+      sub_34D6F74();
+    v7 = sub_34E9144(v6, v5, 0);
+    if ( !v7 )
+      sub_34D6F74();
+    return *(unsigned __int8 *)(v7 + 64);
+  }
+}
+
+-----------------------------------------------------------------
+
+
+See in this function :
+
+-> sub_34D6F04(off_A987F88);
+
+-> v4 = sub_34D7144(*(_DWORD *)off_A987F88);
+
+=====> OFFSET OF ClothChanger.cs is : A987F88
+
+
+--------------------------------------------------------
+
+THIS IS VERY RARE OFFSET Because no one provide it in Discord or YT :
+
+------------------------------------------------------------
+
+Suppose You Could Not Find Offset for it :
+
+Then Go in class 
+
+public class AvatarWardrobeData : CSVBaseData, IComparable<AvatarWardrobeData>, IGetId //
+
+
+Then can try other functions like :
+
+// RVA: 0x4BCA9AC Offset: 0x4BCA9AC VA: 0xB934A9AC
+public ResourceID get_EffectID_3P_M() { }
+
+
+See Below Function : 
+
+
+int __fastcall sub_4BCA9AC(int a1)
+{
+  int v2; // r5
+  int v4; // r0
+  int v5; // r6
+  int v6; // r5
+  int v7; // r5
+  int *v8; // r6
+  int v9; // r5
+  int v10; // r0
+
+  if ( !byte_ADEA2FA )
+  {
+    sub_34D6F04(off_A986D5C);
+    sub_34D6F04(off_A987F88); -> off_A987F88 (offset)
+    byte_ADEA2FA = 1;
+  }
+  if ( sub_34D70F4(2842, 0) )
+  {
+    v2 = sub_34D7104(2842, 0);
+    if ( !v2 )
+      sub_34D6F74();
+    return sub_34E0650(v2, a1, 0);
+  }
+  else
+  {
+    v4 = sub_34D7144(*(_DWORD *)off_A987F88); -> off_A987F88 (offset) 
+    v5 = *(unsigned __int16 *)(a1 + 24);
+    v6 = v4;
+    if ( !v4 )
+      sub_34D6F74();
+    v7 = sub_34E9140(v6, v5, 0);
+    if ( !v7 )
+      sub_34D6F74();
+    v8 = (int *)off_A986D5C;
+    v9 = *(_DWORD *)(v7 + 12);
+    v10 = *(_DWORD *)off_A986D5C;
+    if ( !*(_DWORD *)(*(_DWORD *)off_A986D5C + 116) )
+    {
+      sub_34D6EA4();
+      v10 = *v8;
+    }
+    if ( sub_34D79C4(v9, **(_DWORD **)(v10 + 92), 0) && !sub_4BCAAE8(a1) )
+      return sub_4BCABB4(a1);
+    else
+      return v9;
+  }
+}
+
+================================================================================
+📌 SUMMARY - CLOTH OFFSET
+================================================================================
+
+The cloth changer offset is: off_A987F88
+
+This offset is used in:
+1. AvatarWardrobeData.get_EffectForceShow()
+2. AvatarWardrobeData.get_EffectID_3P_M()
+
+Both functions reference off_A987F88 as the main offset.
+
+================================================================================
+🔴 IMPORTANT NOTES:
+================================================================================
+
+1. This is a RARE offset not commonly shared
+2. The offset may vary between game versions
+3. Use IDA Pro's F5 to view pseudo-code
+4. Look for off_ references in the functions
+5. The offset A987F88 is the TypeInfo for AvatarWardrobeData
+
+================================================================================
+📌 HOW TO USE THIS GUIDE:
+================================================================================
+
+1. Open your libil2cpp.so in IDA Pro
+2. Search for the AvatarWardrobeData class in dump.cs
+3. Find the get_EffectForceShow() method
+4. Note its RVA offset
+5. Jump to that address in IDA Pro
+6. Press F5 to view pseudo-code
+7. Look for off_A987F88 in the code
+8. This is your cloth changer offset!
+
+================================================================================
+                    END OF CLOTH OFFSET GUIDE
+================================================================================`;
+}
+            
             function removeCurrentFile() {
                 currentFile = null;
                 fileInfo.classList.remove('show');
