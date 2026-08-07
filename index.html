@@ -235,7 +235,12 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(46, 213, 115, 0.3);
         }
-
+        .btn-download.initbase {
+            background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+        }
+        .btn-download.initbase:hover {
+            box-shadow: 0 8px 30px rgba(243, 156, 18, 0.3) !important;
+        }
         .btn-download.antihack {
             background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
         }
@@ -342,6 +347,7 @@
 
         <button class="btn-download antihack" id="downloadAntiHackBtn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); display: block;">🛡️ Download Anti-Cheat Guide.txt</button>
         <button class="btn-download cloth" id="downloadClothBtn" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); display: block;">👔 Download Cloth Offset Guide.txt</button>
+        <button class="btn-download initbase" id="downloadInitBaseBtn" style="background: linear-gradient(135deg, #f39c12, #e67e22); display: block;">🎯 Download InitBase Finder Guide.txt</button>
         
         <!-- Results Preview -->
         <div class="results-preview" id="resultsPreview">
@@ -373,6 +379,7 @@
             const downloadBtn = document.getElementById('downloadBtn');
             const downloadAntiHackBtn = document.getElementById('downloadAntiHackBtn'); // ← ADD THIS LINE
             const downloadClothBtn = document.getElementById('downloadClothBtn'); // ← ADD THIS LINE
+            const downloadInitBaseBtn = document.getElementById('downloadInitBaseBtn'); // ← ADD THIS LINE
             const missingList = document.getElementById('missingList');
 
             let currentFile = null;
@@ -587,6 +594,135 @@ Both functions reference off_A987F88 as the main offset.
                     END OF CLOTH OFFSET GUIDE
 ================================================================================`;
 }
+            // ============ InitBase Guide Content ============
+function getInitBaseGuide() {
+    return `================================================================================
+                    🎯 INITBASE OFFSET FINDING GUIDE 🎯
+================================================================================
+
+📌 FINDING INITBASE OFFSET IN DUMP.cs AND IDA PRO:
+
+================================================================================
+STEP 1: FIND THE FUNCTION IN DUMP.CS
+================================================================================
+
+Search in dump.cs for: 'public static ulong GetLocalPlayerUserID() { }'
+
+You will find:
+
+// RVA: 0x65091C0 Offset: 0x65091C0 VA: 0x9EE091C0
+public static ulong GetLocalPlayerUserID() { }
+
+================================================================================
+STEP 2: GO TO IDA PRO
+================================================================================
+
+Copy the offset: 0x65091C0
+
+Jump to this address in IDA Pro.
+Click on the address and press F5 to see pseudo-code.
+
+================================================================================
+STEP 3: PSEUDO-CODE ANALYSIS
+================================================================================
+
+int sub_65091C0()
+{
+  int v0; // r4
+  __int64 v1; // r0
+  int *v2; // r4
+  int v3; // r0
+
+  if ( !byte_ADF37FF )
+  {
+    sub_54AAF38(off_A988FDC); → initbase_Offset
+    byte_ADF37FF = 1;
+  }
+  if ( sub_7DB6B6C(663, 0) )
+  {
+    v0 = sub_7DB6C3C(663, 0);
+    if ( !v0 )
+      sub_54AAEE8();
+    LODWORD(v1) = sub_798B7B8(v0, 0);
+  }
+  else
+  {
+    v2 = (int *)off_A988FDC;  → initbase_Offset
+    v3 = *(_DWORD *)off_A988FDC;  → initbase_Offset
+    if ( !*(_DWORD *)(*(_DWORD *)off_A988FDC + 116) )  → initbase_Offset
+    {
+      sub_54AB068();
+      v3 = *v2;
+    }
+    return *(_QWORD *)(*(_DWORD *)(v3 + 92) + 48);
+  }
+  return v1;
+}
+
+================================================================================
+🎯 THE INITBASE OFFSET
+================================================================================
+
+The InitBase offset is: off_A988FDC
+
+This is used in:
+1. GetLocalPlayerUserID() function
+2. Multiple sub_54AAF38 calls
+3. The base address for the game
+
+================================================================================
+📌 HOW TO FIND IT IN OTHER VERSIONS:
+================================================================================
+
+1. Open your dump.cs file
+2. Search for "GetLocalPlayerUserID"
+3. Note the RVA offset (e.g., 0x65091C0)
+4. Open libil2cpp.so in IDA Pro
+5. Jump to that RVA address
+6. Press F5 to view pseudo-code
+7. Look for "off_" references in the code
+8. The first off_ is usually the InitBase offset
+
+================================================================================
+🔴 IMPORTANT NOTES:
+================================================================================
+
+1. The InitBase offset is crucial for memory manipulation
+2. It's used as the base address for many game functions
+3. The offset may vary between game versions
+4. Always verify with your specific dump.cs file
+5. Use IDA Pro's F5 (Hex-Rays decompiler) to view pseudo-code
+
+================================================================================
+✅ EXAMPLE - HOW TO USE IN CODE:
+================================================================================
+
+// In your offsets.cs
+internal static class Offsets
+{
+    internal static uint InitBase = 0xA988FDC;  // ← From this guide
+    internal static uint StaticClass = 0x5C;
+    // ... other offsets
+}
+
+// In your memory reading code
+ulong baseAddress = ReadMemory<ulong>(InitBase + 0x48);
+
+================================================================================
+📌 SUMMARY - KEY POINTS:
+================================================================================
+
+1. Find GetLocalPlayerUserID in dump.cs
+2. Copy its RVA offset
+3. Jump to that address in IDA Pro
+4. Look for off_ references
+5. The first off_ is the InitBase offset
+6. Add it to your offsets.cs
+
+================================================================================
+                    END OF INITBASE FINDER GUIDE
+================================================================================`;
+}
             
             function removeCurrentFile() {
                 currentFile = null;
@@ -619,6 +755,20 @@ Both functions reference off_A987F88 as the main offset.
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'ClothOffset_Guide.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            // ============ Download InitBase Guide ============
+            downloadInitBaseBtn.addEventListener('click', () => {
+                const guide = getInitBaseGuide();
+                const blob = new Blob([guide], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'InitBaseFinder_Guide.txt';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
