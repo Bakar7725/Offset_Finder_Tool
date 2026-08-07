@@ -1459,6 +1459,39 @@
                     }
                 }
 
+                // --- swapweapon ---
+                const playerPattern2 = /internal\s+class\s+Player\s*:.*?TypeDefIndex:\s*(\d+)\s*\{([^}]*)\}/s;
+                const playerMatch2 = content.match(playerPattern2);
+                if (playerMatch2) {
+                    const classBody2 = playerMatch2[2];
+                    const lines2 = classBody2.split('\n');
+                    
+                    for (let i = 0; i < lines2.length; i++) {
+                        if (lines2[i].includes('public const float RECOVER_FROM_HIT_FLY_INTERVAL')) {
+                            // Check next 3 lines
+                            if (i + 3 < lines2.length &&
+                                lines2[i + 1].includes('HitFlyInfo') &&
+                                lines2[i + 2].includes('private bool') &&
+                                lines2[i + 3].includes('private float')) {
+                                
+                                const offsetMatch = lines2[i + 3].match(/0x[0-9A-Fa-f]+/);
+                                if (offsetMatch) {
+                                    results.push({
+                                        label: 'swapweapon',
+                                        offset: offsetMatch[0],
+                                        class: 'Player',
+                                        typedef: 'N/A',
+                                        line: lines2[i + 3].trim(),
+                                        type: 'float',
+                                        field: 'swapweapon'
+                                    });
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 // ==========================================
                 // 🆕 FIRE INTERVAL - PlayerAttributes Class
                 // Find 'public float GrenadeThrowSpeedScale;' then get the 3rd line after it
@@ -1567,6 +1600,11 @@
                     pattern: 'SortedList<uint, uint>',
                     class: 'PlayerNetwork',
                     manual: 'In PlayerNetwork class, find the first SortedList<uint, uint> field. This is used for WeaponSkinMap offset.'
+                },
+                'swapweapon': {
+                    pattern: 'public const float RECOVER_FROM_HIT_FLY_INTERVAL',
+                    class: 'Player',
+                    manual: 'In Player class, find "public const float RECOVER_FROM_HIT_FLY_INTERVAL", then check next 3 lines for HitFlyInfo, private bool, private float'
                 }
             };
 
