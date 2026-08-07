@@ -334,7 +334,7 @@
         <!-- Download Button -->
         <button class="btn-download" id="downloadBtn">📥 Download ExtractedAlloffsets.txt</button>
 
-        <button class="btn-download antihack" id="downloadAntiHackBtn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🛡️ Download Anti-Cheat Guide.txt</button>
+        <button class="btn-download antihack" id="downloadAntiHackBtn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); display: block;">🛡️ Download Anti-Cheat Guide.txt</button>
 
         <!-- Results Preview -->
         <div class="results-preview" id="resultsPreview">
@@ -364,6 +364,7 @@
             const resultsPreview = document.getElementById('resultsPreview');
             const resultsContent = document.getElementById('resultsContent');
             const downloadBtn = document.getElementById('downloadBtn');
+            const downloadAntiHackBtn = document.getElementById('downloadAntiHackBtn'); // ← ADD THIS LINE
             const missingList = document.getElementById('missingList');
 
             let currentFile = null;
