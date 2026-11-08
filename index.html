@@ -130,7 +130,6 @@
         .offset-card { 
             position: relative;
             border-radius: 6px;
-            /* We move padding and border here to act as the outer container */
             border: 1px solid var(--border-color); 
             border-left: 3px solid var(--red-dark); 
             background: var(--bg-card);
@@ -139,33 +138,28 @@
             z-index: 1;
         }
 
-        /* Inner wrapper to handle overflow */
         .offset-card-inner {
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             padding: 12px 16px; 
-            border-radius: 3px; /* Match inner radius */
-            overflow: hidden; /* THIS IS THE MAGIC */
+            border-radius: 3px;
+            overflow: hidden; 
             position: relative;
             height: 100%;
         }
 
-        /* Water Wave Animation */
         .offset-card-inner::after {
             content: '';
             position: absolute;
             top: 100%; left: 0; 
             width: 200%;
             height: 100%; 
-            
-            /* SVG Wave with dark red color */
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M0,10 Q25,20 50,10 T100,10 L100,20 L0,20 Z" fill="%238b0000"/></svg>');
             background-size: 50% 100%;
             background-repeat: repeat-x;
-            
             transition: all 0.4s ease-in-out;
-            z-index: -1; /* Behind text */
+            z-index: -1;
         }
 
         .offset-card:hover {
@@ -174,7 +168,6 @@
             transform: translateX(3px);
         }
 
-        /* Trigger Wave on hover */
         .offset-card:hover .offset-card-inner::after {
             top: 0;
             animation: waveFlow 2s linear infinite;
@@ -202,7 +195,6 @@
             text-overflow: ellipsis; 
         }
         
-        /* SOURCE LINE STYLE */
         .offset-source {
             font-family: var(--font-mono);
             font-size: 10px;
@@ -310,14 +302,26 @@
 
             .file-item { padding: 10px; }
             
-            /* 3 Buttons Inline for Mobile */
+            /* 3 Buttons Inline for Mobile (FIXED WIDTH) */
             .bottom-buttons { 
                 grid-template-columns: repeat(3, 1fr); 
                 padding-top: 10px; 
                 margin-top: 10px; 
+                gap: 6px;
             }
-            .bottom-btn { font-size: 10px; padding: 8px 4px; }
-            .bottom-btn svg { width: 14px; height: 14px; }
+            .bottom-btn-wrapper {
+                width: 100%;
+                min-width: 0;
+            }
+            .bottom-btn { 
+                font-size: 10px; 
+                padding: 8px 4px; 
+                gap: 4px;
+            }
+            .bottom-btn svg { 
+                width: 14px; 
+                height: 14px; 
+            }
 
             /* Show Action Buttons in File List on Mobile */
             .action-icons-wrapper { display: flex; }
@@ -348,7 +352,6 @@
 <body>
     <div class="app">
         
-        <!-- MAIN SIDEBAR (Upload & File List) -->
         <aside class="sidebar active-tab" id="tabUpload">
             <div class="brand">
                 <div class="brand-icon">
@@ -380,7 +383,7 @@
 
             <div class="file-list" id="fileList"></div>
 
-            <!-- 2x2 Grid Buttons (Desktop) / 3 Inline (Mobile) -->
+            <!-- 2x2 Grid (Desktop) / 3 Inline (Mobile) -->
             <div class="bottom-buttons">
                 <div class="bottom-btn-wrapper">
                     <button class="bottom-btn" id="btnAntiHack">
@@ -400,7 +403,7 @@
                         Cloth Offset
                     </button>
                 </div>
-                <!-- View .txt Button (Only shows on Desktop via CSS class) -->
+                <!-- View .txt Button (Desktop Only) -->
                 <div class="bottom-btn-wrapper btn-view-txt" style="display:none;">
                     <button class="bottom-btn" id="btnViewTxt">
                         <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
@@ -410,7 +413,6 @@
             </div>
         </aside>
 
-        <!-- MAIN PANEL (Details - Hidden on Mobile) -->
         <main class="main-panel" id="tabDetails">
             <div class="panel-header">
                 <div class="panel-title" id="mobileHeaderTitle"><span class="dot"></span> Live Extracted Data</div>
@@ -666,7 +668,6 @@
                 }
             }
 
-            // UPDATED: Render Cards with Inner Wrapper for Wave Overflow
             function renderCards(results, container) {
                 container.innerHTML = '';
                 results.forEach(res => {
