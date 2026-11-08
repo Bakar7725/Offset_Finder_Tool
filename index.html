@@ -1481,23 +1481,94 @@ internal static class AntiHack2
                 }
 
                 // --- WeaponRecoil ---
-                const recoilPattern = /\/\/\s*Namespace:\s*COW\.GamePlay\s*\n\s*internal\s+class\s+(\w+)\s*:\s*(\w+)\s*\/\/\s*TypeDefIndex:\s*(\d+)\s*\n\{\s*\n\s*\/\/\s*Fields\s*\n\s*private\s+float\s+(\w+);\s*\/\/\s*([^\n]+)\s*\n\s*\/\/\s*Methods/g;
-                const recoilMatches = [];
-                let rm;
-                while ((rm = recoilPattern.exec(content)) !== null) {
-                    recoilMatches.push(rm);
+                                // --- WeaponRecoil (STRUCTURE-ONLY, survives obfuscation updates) ---
+                let mlfcIdx = -1;
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('public class MultiLineFireConfig // TypeDefIndex:')) {
+                        mlfcIdx = i;
+                        break;
+                    }
                 }
-                if (recoilMatches.length >= 3) {
-                    const r = recoilMatches[2];
-                    results.push({
-                        label: 'WeaponRecoil',
-                        offset: r[5].trim(),
-                        class: r[1],
-                        typedef: r[3],
-                        line: `private float ${r[4]}; // ${r[5].trim()}`,
-                        type: 'float',
-                        field: r[4]
-                    });
+
+                if (mlfcIdx !== -1) {
+                    const isTypeDecl = (ln) =>
+                        /^\s*(public|internal|private|protected)\s+(static\s+|abstract\s+|sealed\s+|partial\s+)*(class|enum|struct|interface)\s+\w+/.test(ln);
+
+                    const findPrevTypeDecl = (idx) => {
+                        for (let i = idx - 1; i >= 0; i--) {
+                            if (isTypeDecl(lines[i])) return i;
+                        }
+                        return -1;
+                    };
+
+                    const findBraceLine = (declIdx) => {
+                        for (let j = declIdx; j < lines.length; j++) {
+                            if (lines[j].includes('{')) return j;
+                        }
+                        return -1;
+                    };
+
+                    const getFieldLines = (braceLine) => {
+                        const fields = [];
+                        for (let j = braceLine + 1; j < Math.min(braceLine + 60, lines.length); j++) {
+                            const t = lines[j].trim();
+                            if (t.startsWith('// Methods')) break;
+                            if (!t) continue;
+                            if (t.startsWith('private ') || t.startsWith('public ') ||
+                                t.startsWith('protected ') || t.startsWith('internal ')) {
+                                fields.push(t);
+                            }
+                        }
+                        return fields;
+                    };
+
+                    // Back 2 type decls from MultiLineFireConfig -> structure-check class
+                    const p1 = findPrevTypeDecl(mlfcIdx);
+                    const p2 = p1 !== -1 ? findPrevTypeDecl(p1) : -1;
+
+                    let verifyOk = false;
+                    if (p2 !== -1) {
+                        const b2 = findBraceLine(p2);
+                        if (b2 !== -1) {
+                            const f2 = getFieldLines(b2);
+                            if (f2.length >= 3 &&
+                                /^private\s+AttackableEntity\s+\w+\s*;/.test(f2[0]) &&
+                                /^private\s+Transform\s+\w+\s*;/.test(f2[2])) {
+                                verifyOk = true;
+                            }
+                        }
+                    }
+
+                    // Back 2 more decls -> WeaponRecoil holder class
+                    if (verifyOk) {
+                        const p3 = findPrevTypeDecl(p2);
+                        const p4 = p3 !== -1 ? findPrevTypeDecl(p3) : -1;
+                        if (p4 !== -1) {
+                            const b4 = findBraceLine(p4);
+                            if (b4 !== -1) {
+                                const f4 = getFieldLines(b4);
+                                if (f4.length > 0) {
+                                    const firstField = f4[0];
+                                    const floatMatch = firstField.match(/^private\s+float\s+(\w+)\s*;\s*\/\/\s*(0x[0-9A-Fa-f]+)/);
+                                    if (floatMatch) {
+                                        const fieldName = floatMatch[1];
+                                        const offset = floatMatch[2];
+                                        const classNameMatch = lines[p4].match(/class\s+(\w+)/);
+                                        const typedefMatch = lines[p4].match(/TypeDefIndex:\s*(\d+)/);
+                                        results.push({
+                                            label: 'WeaponRecoil',
+                                            offset: offset,
+                                            class: classNameMatch ? classNameMatch[1] : 'Unknown',
+                                            typedef: typedefMatch ? typedefMatch[1] : 'N/A',
+                                            line: firstField,
+                                            type: 'float',
+                                            field: fieldName
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // --- CurrentBehaviour / CurrentObserver ---
@@ -2530,7 +2601,11 @@ if (playerMatch2) {
                 'FollowCamera': { pattern: 'protected FollowCamera', class: 'Player', manual: 'In Player class, search for "protected FollowCamera"' },
                 'AimRotation': { pattern: 'Quaternion.*k__BackingField', class: 'Player', manual: 'Search for [CompilerGenerated] + private Quaternion k__BackingField' },
                 'NoReload': { pattern: 'public bool ShootNoReload', class: 'Unknown', manual: 'Search for "public bool ShootNoReload"' },
-                'WeaponRecoil': { pattern: 'private float.*Recoil', class: 'Unknown', manual: 'Search for "private float" with "Recoil"' },
+                'WeaponRecoil': {
+    pattern: 'public class MultiLineFireConfig',
+    class: 'Unknown',
+    manual: 'Find "public class MultiLineFireConfig // TypeDefIndex:", go back 2 type declarations, verify field order (private AttackableEntity, skip, private Transform), then go back 2 more declarations and take its first field: private float <name>; // 0xC (noRecoil).'
+},
                 'CurrentBehaviour / CurrentObserver': { pattern: 'protected.*Dictionary<.*, int>', class: 'Unknown', manual: '4 protected lines, 4th has Dictionary<..., int>' },
                 'ObserverPlayer': { pattern: 'private Player.*k__BackingField', class: 'Unknown', manual: 'k__BackingField; followed by private Player' },
                 'MatchStatus': { pattern: 'private bool.*protected.*\\..*protected GameObject', class: 'Unknown', manual: 'private bool, protected TYPE.TYPE, protected GameObject' },
